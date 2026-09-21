@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mahjong Leaderboard</title>
+<meta name="description" content="Win rates and ratings for the mahjong group.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='24' height='28' rx='5' fill='%230e6b4d'/%3E%3Crect x='4' y='2' width='24' height='24' rx='5' fill='%23fbf8ee'/%3E%3Ctext x='16' y='20' font-size='16' text-anchor='middle' font-weight='700' fill='%23c23b26'%3E%E4%B8%AD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #edf1ed;
+    --surface: #f9fbf8;
+    --surface-2: #e4eae4;
+    --ink: #101c17;
+    --ink-2: #435249;
+    --ink-3: #5c6b63;
+    --line: #d2dbd3;
+    --line-strong: #a9b7ad;
+    --jade: #0e6b4d;
+    --jade-soft: #d3eadf;
+    --red: #b8351f;
+    --red-soft: #f6dcd6;
+    --focus: #0e6b4d;
+
+    --tile-face: #fbf8ee;
+    --tile-ink: #1a231e;
+    --tile-edge: #1f7a5a;
+    --tile-shadow: rgba(16, 28, 23, .22);
+
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+    --s-other: #7d8a83;
+
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --cjk: "PingFang TC", "Hiragino Sans", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0b1511;
+      --surface: #12211a;
+      --surface-2: #1a2d24;
+      --ink: #eaf2ed;
+      --ink-2: #b7c8bd;
+      --ink-3: #93a59a;
+      --line: #263a30;
+      --line-strong: #47604f;
+      --jade: #4cc79a;
+      --jade-soft: #173a2b;
+      --red: #ff8168;
+      --red-soft: #3d201b;
+      --focus: #4cc79a;
+      --tile-shadow: rgba(0, 0, 0, .5);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+      --s-other: #8a988f;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b1511;
+    --surface: #12211a;
+    --surface-2: #1a2d24;
+    --ink: #eaf2ed;
+    --ink-2: #b7c8bd;
+    --ink-3: #93a59a;
+    --line: #263a30;
+    --line-strong: #47604f;
+    --jade: #4cc79a;
+    --jade-soft: #173a2b;
+    --red: #ff8168;
+    --red-soft: #3d201b;
+    --focus: #4cc79a;
+    --tile-shadow: rgba(0, 0, 0, .5);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --s-other: #8a988f;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.5 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+
+  .page { max-width: 1040px; margin: 0 auto; padding: 28px 16px 56px; display: grid; gap: 28px; }
+  @media (min-width: 720px) { .page { padding: 44px 24px 72px; gap: 36px; } }
+
+  /* ---------- tiles (the recurring motif) ---------- */
+  .tile {
+    display: inline-grid; place-items: center; flex: none;
+    width: 30px; height: 38px; margin-bottom: 4px;
+    border-radius: 6px;
+    background: var(--tile-face); color: var(--tile-ink);
+    font: 700 18px/1 var(--display);
+    box-shadow: 0 4px 0 var(--tile-edge), 0 6px 8px var(--tile-shadow), inset 0 0 0 1px rgba(0,0,0,.07);
+    font-variant-numeric: tabular-nums;
+  }
+  .tile.first { color: #c23b26; }
+  .tile-lg { width: 46px; height: 58px; border-radius: 8px; box-shadow: 0 5px 0 var(--tile-edge), 0 8px 12px var(--tile-shadow), inset 0 0 0 1px rgba(0,0,0,.07); }
+  .cjk { font-family: var(--cjk); font-weight: 700; color: #c23b26; font-size: 32px; line-height: 1; }
+
+  /* ---------- header ---------- */
+  .top { display: flex; align-items: center; gap: 18px; }
+  h1 {
+    margin: 0; font: 800 clamp(30px, 6vw, 48px)/1.05 var(--display);
+    letter-spacing: -.02em; text-wrap: balance;
+  }
+  .meta { margin: 6px 0 0; color: var(--ink-2); }
+  .status { margin: 4px 0 0; font-size: 13px; color: var(--ink-3); display: flex; align-items: center; gap: 7px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+  .status.live .dot { background: var(--jade); }
+  .status.warn .dot { background: var(--red); }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); border-block: 1px solid var(--line); }
+  .fact { padding: 14px 0; display: grid; gap: 2px; }
+  .fact + .fact { border-top: 1px solid var(--line); }
+  @media (min-width: 720px) {
+    .fact { padding: 16px 20px; }
+    .fact:first-child { padding-left: 0; }
+    .fact + .fact { border-top: 0; border-left: 1px solid var(--line); }
+  }
+  .fact .k { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .fact .v { font: 700 20px/1.25 var(--display); letter-spacing: -.01em; }
+  .fact .n { font-size: 13px; color: var(--ink-2); }
+
+  /* ---------- panels ---------- */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .panel-head { padding: 18px 18px 6px; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+  @media (min-width: 720px) { .panel-head { padding: 22px 24px 8px; } }
+  h2 { margin: 0; font: 700 22px/1.2 var(--display); letter-spacing: -.01em; }
+  .hint { margin: 0; font-size: 13px; color: var(--ink-3); }
+  .flat h2 { margin-bottom: 4px; }
+
+  /* ---------- leaderboard ---------- */
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  #board > thead > tr > th, #board > tbody > tr.row > td { padding: 12px 8px; text-align: right; white-space: nowrap; }
+  #board > thead > tr > th:first-child, #board > tbody > tr.row > td:first-child { padding-left: 16px; text-align: left; width: 1%; }
+  #board > thead > tr > th:last-child, #board > tbody > tr.row > td:last-child { padding-right: 16px; }
+  @media (min-width: 720px) {
+    #board > thead > tr > th:first-child, #board > tbody > tr.row > td:first-child { padding-left: 24px; }
+    #board > thead > tr > th:last-child, #board > tbody > tr.row > td:last-child { padding-right: 24px; }
+    #board > thead > tr > th, #board > tbody > tr.row > td { padding-inline: 12px; }
+  }
+  #board > thead > tr > th.name, #board > tbody > tr.row > td.name { text-align: left; }
+  #board > thead > tr > th { padding-top: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+  .sort { background: none; border: 0; padding: 4px 2px; cursor: pointer; letter-spacing: inherit; text-transform: inherit; font-weight: inherit; color: inherit; display: inline-flex; gap: 4px; align-items: center; }
+  .sort:hover { color: var(--ink); }
+  .sort .arrow { width: 8px; opacity: 0; font-size: 9px; }
+  th[aria-sort] .sort { color: var(--ink); }
+  th[aria-sort] .arrow { opacity: 1; }
+  #board tbody tr.row { cursor: pointer; }
+  #board tbody tr.row td { border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  #board tbody tr.row:hover td { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+  #board tbody tr.row.open td { border-bottom-color: transparent; background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .pname { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; font-weight: 600; font-size: 16px; display: block; }
+  .sub { font-size: 12.5px; color: var(--ink-3); display: flex; gap: 8px; align-items: center; min-height: 0; }
+  .sub:empty { display: none; }
+  .sub-m { display: none; }
+  .tag { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line-strong); color: var(--ink-2); border-radius: 999px; padding: 0 7px; line-height: 17px; }
+  .rate { display: inline-flex; align-items: center; justify-content: flex-end; gap: 12px; }
+  .rate .num { font: 700 19px/1 var(--display); min-width: 4.4ch; text-align: right; }
+  .bar { position: relative; width: 104px; height: 6px; border-radius: 3px; background: var(--surface-2); }
+  .bar::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--line-strong); }
+  .bar i { position: absolute; top: 0; bottom: 0; }
+  .bar i.up { background: var(--jade); border-radius: 0 3px 3px 0; }
+  .bar i.down { background: var(--red); border-radius: 3px 0 0 3px; }
+  .best { display: inline-block; padding: 1px 8px; margin-right: -8px; border-radius: 999px; background: var(--jade-soft); color: var(--jade); font-weight: 700; }
+  .luck { display: inline-flex; gap: 5px; align-items: center; font-weight: 600; }
+  .luck.pos { color: var(--jade); }
+  .luck.neg { color: var(--red); }
+  .luck.zero { color: var(--ink-3); }
+  .luck .ar { font-size: 9px; }
+  .muted { color: var(--ink-2); }
+  #dataNote:empty { display: none; }
+  .sub { flex-wrap: wrap; }
+  @media (max-width: 719px) {
+    .c-g, .c-w, .c-exp, .bar { display: none; }
+    #board > tbody > tr.row > td.name { white-space: normal; }
+    .sub-m { display: inline; }
+    .rate .num { font-size: 18px; }
+    .who { gap: 10px; }
+    .best { margin-right: 0; }
+  }
+  @media (max-width: 460px) { .c-luck { display: none; } }
+
+  tr.detail td { padding: 0 !important; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 55%, transparent); text-align: left !important; white-space: normal !important; }
+  .dgrid { display: grid; gap: 22px; padding: 6px 16px 22px; }
+  @media (min-width: 720px) { .dgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); padding: 8px 24px 26px; gap: 32px; } }
+  .dgrid h3 { margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+  .pips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .pip { width: 22px; height: 28px; border-radius: 4px; display: grid; place-items: center; font: 700 11px/1 var(--body); background: var(--surface); color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .pip.w { background: var(--jade); color: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+  :root[data-theme="dark"] .pip.w { color: #06231a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pip.w { color: #06231a; } }
+  .dl { margin: 14px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 14px; }
+  .dl dt { color: var(--ink-2); }
+  .dl dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .h2h th, .h2h td { padding: 6px 0; text-align: right; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .h2h th:first-child, .h2h td:first-child { text-align: left; }
+  .h2h thead th { font-size: 12px; font-weight: 600; color: var(--ink-3); letter-spacing: .04em; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  .h2h tbody td { border-bottom: 1px solid var(--line); }
+  .h2h tbody tr:last-child td { border-bottom: 0; }
+  .h2h .lead { font-weight: 700; color: var(--jade); }
+
+  /* ---------- chart ---------- */
+  .chart-body { padding: 8px 12px 18px; }
+  @media (min-width: 720px) { .chart-body { padding: 8px 18px 22px; } }
+  .chart-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: space-between; align-items: center; padding: 6px 6px 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px 5px 9px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px; cursor: pointer; font-size: 13.5px; font-weight: 500; }
+  .chip .key { width: 16px; height: 3px; border-radius: 2px; background: var(--c); }
+  .chip[aria-pressed="false"] { color: var(--ink-3); border-style: dashed; background: transparent; }
+  .chip[aria-pressed="false"] .key { background: transparent; box-shadow: inset 0 0 0 1px var(--ink-3); height: 3px; }
+  .chip:hover { background: var(--surface-2); }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { background: none; border: 0; padding: 5px 13px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+  #chartwrap { position: relative; }
+  #chart { display: block; width: 100%; touch-action: pan-y; }
+  #chart:focus-visible { outline-offset: 0; }
+  #chart text { font: 11.5px var(--body); fill: var(--ink-3); }
+  #chart .grid { stroke: var(--line); stroke-width: 1; }
+  #chart .ref { stroke: var(--line-strong); stroke-width: 1; }
+  #chart .day { stroke: var(--line); stroke-width: 1; }
+  #chart .cross { stroke: var(--ink-3); stroke-width: 1; }
+  #chart .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; transition: opacity .12s; }
+  #chart .dim { opacity: .16; }
+  .tip { position: absolute; top: 12px; z-index: 2; pointer-events: none; min-width: 168px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: 0 8px 24px var(--tile-shadow); font-size: 13px; }
+  .tip .th { font-weight: 600; margin-bottom: 1px; }
+  .tip .ts { color: var(--ink-3); font-size: 12px; margin-bottom: 7px; }
+  .tip .tr { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; align-items: center; padding: 1.5px 0; }
+  .tip .tk { width: 14px; height: 3px; border-radius: 2px; background: var(--c); }
+  .tip .tr b { font-variant-numeric: tabular-nums; font-size: 14px; }
+  .tip .tr span:nth-child(2) { color: var(--ink-2); }
+  .tip .tr.won span:nth-child(2) { color: var(--ink); font-weight: 600; }
+  .mini th, .mini td { padding: 7px 10px; text-align: right; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  .mini th:first-child, .mini td:first-child, .mini th:nth-child(2), .mini td:nth-child(2) { text-align: left; }
+  .mini thead th { position: sticky; top: 0; background: var(--surface); font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .mini .key { display: inline-block; width: 10px; height: 3px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: middle; }
+  .tscroll { max-height: 420px; overflow: auto; }
+
+  /* ---------- recent games ---------- */
+  .games { margin-top: 8px; border-top: 1px solid var(--line); }
+  .g { display: grid; grid-template-columns: 44px 62px minmax(0, 1fr); gap: 4px 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .g .gid { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .g .gd { color: var(--ink-3); font-size: 13.5px; }
+  .g .gw { font-weight: 600; }
+  .g .gw .win { color: var(--jade); }
+  .g .gp { color: var(--ink-2); font-size: 13.5px; grid-column: 3; }
+  @media (min-width: 720px) {
+    .g { grid-template-columns: 52px 70px 200px minmax(0, 1fr); }
+    .g .gp { grid-column: auto; }
+  }
+  .more { margin-top: 14px; background: none; border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; }
+  .more:hover { background: var(--surface-2); }
+
+  /* ---------- explainer ---------- */
+  details.how { border-top: 1px solid var(--line); padding-top: 18px; }
+  details.how summary { cursor: pointer; font: 700 22px/1.2 var(--display); letter-spacing: -.01em; }
+  details.how .txt { max-width: 68ch; margin-top: 14px; color: var(--ink-2); display: grid; gap: 12px; }
+  details.how .txt p { margin: 0; }
+  details.how .txt b { color: var(--ink); }
+  .foot { color: var(--ink-3); font-size: 13px; }
+  .note { margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--red-soft); color: var(--ink); font-size: 14px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">This page needs JavaScript to show the leaderboard.</p></noscript>
+<div class="page">
+  <header>
+    <div class="top">
+      <div class="tile tile-lg" aria-hidden="true"><span class="cjk">中</span></div>
+      <div>
+        <h1>Mahjong Leaderboard</h1>
+        <p class="meta" id="meta"></p>
+        <p class="status" id="status"></p>
+      </div>
+    </div>
+  </header>
+
+  <div id="dataNote"></div>
+
+  <div class="facts" id="facts"></div>
+
+  <section class="panel" aria-labelledby="h-board">
+    <div class="panel-head">
+      <h2 id="h-board">Standings</h2>
+      <p class="hint">Ranked by rating. Select a player for details.</p>
+    </div>
+    <div class="scroll">
+      <table id="board">
+        <thead id="boardHead"></thead>
+        <tbody id="boardBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-chart">
+    <div class="panel-head">
+      <h2 id="h-chart">Rating history</h2>
+      <p class="hint">Rating after each game. The darker line is 1,000, the group average.</p>
+    </div>
+    <div class="chart-body">
+      <div class="chart-bar">
+        <div class="legend" id="legend" role="group" aria-label="Show or hide players"></div>
+        <div class="seg" role="group" aria-label="View">
+          <button type="button" id="vChart" aria-pressed="true">Chart</button>
+          <button type="button" id="vTable" aria-pressed="false">Table</button>
+        </div>
+      </div>
+      <div id="chartwrap">
+        <svg id="chart" tabindex="0" role="img" aria-label="Rating history line chart. Use the left and right arrow keys to step through games."></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+      <div class="tscroll" id="tscroll" hidden></div>
+    </div>
+  </section>
+
+  <section class="flat" aria-labelledby="h-games">
+    <h2 id="h-games">Recent games</h2>
+    <div class="games" id="games"></div>
+    <button type="button" class="more" id="moreGames" hidden></button>
+  </section>
+
+  <details class="how">
+    <summary>How ratings work</summary>
+    <div class="txt" id="how"></div>
+  </details>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script src="config.js"></script>
+<script src="snapshot.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  var PRIOR = 10;            // phantom games in the rating formula
+  var PROVISIONAL = PRIOR;   // fewer games than this = provisional
+  var MAX_SERIES = 8;
+
+  // ---------- tiny DOM helper (text always goes through textContent) ----------
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "class") el.className = attrs[k];
+      else if (k === "text") el.textContent = attrs[k];
+      else if (k === "style") el.style.cssText = attrs[k];
+      else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) el.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null || c === false) continue;
+      el.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+  var NS = "http://www.w3.org/2000/svg";
+  function s(tag, attrs) {
+    var el = document.createElementNS(NS, tag);
+    for (var k in attrs || {}) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+  // ---------- formatting ----------
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function fmtDate(iso, withYear) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
+    if (!m) return iso || "";
+    return MONTHS[+m[2] - 1] + " " + (+m[3]) + (withYear ? ", " + m[1] : "");
+  }
+  function pct(v) { return (v * 100).toFixed(1) + "%"; }
+  function signed(v) { var r = Math.round(v * 1000) / 10; return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1); }
+  function rnd(v) { return Math.round(v).toLocaleString("en-US"); }
+
+  // ---------- data: parse the published Log CSV ----------
+  function parseCsv(text) {
+    var rows = [], row = [], cell = "", q = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += c;
+      } else if (c === '"') q = true;
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(cell); cell = ""; rows.push(row); row = [];
+      } else cell += c;
+    }
+    if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  function toIso(v) {
+    v = (v || "").trim();
+    var m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(v))) return m[1] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[3]).slice(-2);
+    if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(v))) return m[3] + "-" + ("0" + m[1]).slice(-2) + "-" + ("0" + m[2]).slice(-2);
+    var d = new Date(v);
+    if (!isNaN(d)) return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    return v;
+  }
+  function parseLog(text) {
+    var rows = parseCsv(text), hi = -1, i;
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i].some(function (c) { return c.trim().toLowerCase() === "game id"; })) { hi = i; break; }
+    }
+    if (hi < 0) throw new Error("No 'Game ID' header found");
+    var head = rows[hi].map(function (c) { return c.trim().toLowerCase(); });
+    var col = { date: head.indexOf("date"), id: head.indexOf("game id"), player: head.indexOf("player"), result: head.indexOf("result") };
+    if (col.id < 0 || col.player < 0 || col.result < 0) throw new Error("Log columns not found");
+    var games = [], byId = {};
+    for (i = hi + 1; i < rows.length; i++) {
+      var r = rows[i], id = (r[col.id] || "").trim(), name = (r[col.player] || "").trim();
+      if (!id || !name) continue;
+      var g = byId[id];
+      if (!g) { g = byId[id] = { id: id, date: col.date >= 0 ? toIso(r[col.date]) : "", players: [], winners: [] }; games.push(g); }
+      g.players.push(name);
+      if (/^win/i.test((r[col.result] || "").trim())) g.winners.push(name);
+    }
+    return { games: games };
+  }
+
+  // ---------- model ----------
+  function rate(w, g, base) { return 1000 + ((w + PRIOR * base) / (g + PRIOR) - base) * 2000; }
+
+  function compute(data) {
+    var games = data.games, byName = {}, list = [], LW = 0, LG = 0, hist = [];
+    games.forEach(function (gm) {
+      gm.players.forEach(function (n) {
+        if (!byName[n]) {
+          byName[n] = { name: n, idx: list.length, g: 0, w: 0, exp: 0, res: [], first: null, together: {} };
+          list.push(byName[n]);
+        }
+      });
+    });
+    games.forEach(function (gm, gi) {
+      gm.players.forEach(function (n) {
+        var p = byName[n], won = gm.winners.indexOf(n) >= 0;
+        p.g++; p.exp += 1 / gm.players.length; p.res.push(won);
+        if (p.first == null) p.first = gi;
+        if (won) { p.w++; LW++; }
+        LG++;
+        gm.players.forEach(function (q) {
+          if (q === n) return;
+          var t = p.together[q] || (p.together[q] = { g: 0, mine: 0, theirs: 0 });
+          t.g++; if (won) t.mine++; if (gm.winners.indexOf(q) >= 0) t.theirs++;
+        });
+      });
+      var b = LG ? LW / LG : 0;
+      hist.push(list.map(function (p) { return p.g ? rate(p.w, p.g, b) : null; }));
+    });
+    var base = LG ? LW / LG : 0;
+    list.forEach(function (p) {
+      p.wr = p.g ? p.w / p.g : 0;
+      p.expR = p.g ? p.exp / p.g : 0;
+      p.luck = p.wr - p.expR;
+      p.rating = rate(p.w, p.g, base);
+      var best = 0, run = 0;
+      p.res.forEach(function (x) { run = x ? run + 1 : 0; if (run > best) best = run; });
+      p.bestStreak = best; p.curStreak = run;
+    });
+    var ranked = list.slice().sort(function (a, b) { return b.rating - a.rating || b.g - a.g; });
+    ranked.forEach(function (p, i) { p.rank = i + 1; });
+    var bestWr = -1;
+    list.forEach(function (p) { if (p.g && p.wr > bestWr) bestWr = p.wr; });
+    return { games: games, players: list, byName: byName, hist: hist, base: base, LW: LW, LG: LG, bestWr: bestWr };
+  }
+
+  function colorVar(p) { return p.idx < MAX_SERIES ? "var(--s" + (p.idx + 1) + ")" : "var(--s-other)"; }
+  function shortName(p) {
+    var first = p.name.split(/\s+/)[0];
+    var clash = M.players.some(function (q) { return q !== p && q.name.split(/\s+/)[0] === first; });
+    return clash ? p.name : first;
+  }
+
+  // ---------- state ----------
+  var M = null;
+  var sortKey = "rating", sortDir = -1, openName = null;
+  var hidden = {}, view = "chart", showAllGames = false, hl = null, source = "snapshot", loadedAt = null, liveFailed = false;
+
+  // ---------- header, facts ----------
+  function renderHeader() {
+    var last = M.games.length ? M.games[M.games.length - 1].date : "";
+    $("#meta").textContent = M.games.length + " games · " + M.players.length + " players" + (last ? " · last played " + fmtDate(last, true) : "");
+    var st = $("#status");
+    clear(st);
+    var cls = "status", msg;
+    if (source === "live") { cls += " live"; msg = "Live from the sheet" + (loadedAt ? " · loaded " + loadedAt : ""); }
+    else if (liveFailed) { cls += " warn"; msg = "Couldn’t reach the sheet, showing a saved copy"; }
+    else msg = "Saved copy of the game log";
+    st.className = cls;
+    st.appendChild(h("span", { class: "dot" }));
+    st.appendChild(h("span", { text: msg }));
+
+    var bad = M.games.filter(function (g) { return g.winners.length !== 1; });
+    var note = $("#dataNote");
+    clear(note);
+    if (bad.length) {
+      note.appendChild(h("p", { class: "note", text: "Check the sheet: " + bad.slice(0, 4).map(function (g) { return g.id + " has " + g.winners.length + " winner" + (g.winners.length === 1 ? "" : "s"); }).join(", ") + (bad.length > 4 ? ", and " + (bad.length - 4) + " more" : "") + ". Each game should have exactly one." }));
+    }
+  }
+
+  function renderFacts() {
+    var box = $("#facts"); clear(box);
+    var ps = M.players.filter(function (p) { return p.g; });
+    if (!ps.length) return;
+    function fact(k, v, n) { box.appendChild(h("div", { class: "fact" }, h("span", { class: "k", text: k }), h("span", { class: "v", text: v }), h("span", { class: "n", text: n }))); }
+
+    var bs = Math.max.apply(null, ps.map(function (p) { return p.bestStreak; }));
+    var bsP = ps.filter(function (p) { return p.bestStreak === bs; });
+    var cur = bsP.filter(function (p) { return p.curStreak === bs; }).length;
+    fact("Longest win streak", bs + (bs === 1 ? " win" : " wins") + " in a row", bsP.map(shortName).join(", ") + (cur ? " · still going" : ""));
+
+    var mg = Math.max.apply(null, ps.map(function (p) { return p.g; }));
+    var mgP = ps.filter(function (p) { return p.g === mg; });
+    fact("Most games", mg + " games", mgP.map(shortName).join(", "));
+
+    var elig = ps.filter(function (p) { return p.g >= PROVISIONAL; });
+    if (elig.length) {
+      var top = elig.slice().sort(function (a, b) { return b.luck - a.luck; })[0];
+      fact("Beating the odds", signed(top.luck) + " pts", shortName(top) + " wins more than table size predicts");
+    }
+  }
+
+  // ---------- leaderboard ----------
+  var COLS = [
+    { key: "rating", label: "Rating", cls: "c-rating", dir: -1 },
+    { key: "g", label: "Games", cls: "c-g", dir: -1 },
+    { key: "w", label: "Wins", cls: "c-w", dir: -1 },
+    { key: "wr", label: "Win %", cls: "c-wr", dir: -1 },
+    { key: "expR", label: "Expected", cls: "c-exp", dir: -1 },
+    { key: "luck", label: "Luck", cls: "c-luck", dir: -1 }
+  ];
+
+  function renderBoard() {
+    var head = $("#boardHead"); clear(head);
+    var tr = h("tr", null, h("th", { scope: "col", "aria-label": "Rank" }));
+    tr.appendChild(headCell({ key: "name", label: "Player", cls: "name", dir: 1 }));
+    COLS.forEach(function (c) { tr.appendChild(headCell(c)); });
+    head.appendChild(tr);
+
+    var rows = M.players.slice().sort(function (a, b) {
+      var av = sortKey === "name" ? a.name.toLowerCase() : a[sortKey === "rating" ? "rating" : sortKey];
+      var bv = sortKey === "name" ? b.name.toLowerCase() : b[sortKey === "rating" ? "rating" : sortKey];
+      if (av < bv) return -1 * sortDir; if (av > bv) return 1 * sortDir;
+      return a.rank - b.rank;
+    });
+
+    var body = $("#boardBody"); clear(body);
+    rows.forEach(function (p) {
+      var open = openName === p.name;
+      var tile = h("span", { class: "tile" + (p.rank === 1 ? " first" : ""), "aria-label": "Rank " + p.rank, text: p.rank });
+      var btn = h("button", { type: "button", class: "pname", "aria-expanded": open ? "true" : "false", text: p.name, onclick: function (e) { e.stopPropagation(); toggle(p.name); } });
+      var sub = h("span", { class: "sub" },
+        h("span", { class: "sub-m", text: p.g + (p.g === 1 ? " game" : " games") + " · " + p.w + (p.w === 1 ? " win" : " wins") }),
+        p.g < PROVISIONAL ? h("span", { class: "tag", title: "Fewer than " + PROVISIONAL + " games, so the rating leans on the group average", text: "Provisional" }) : null);
+      var scale = Math.max(-1, Math.min(1, (p.rating - 1000) / 250)) * 50;
+      var bar = h("span", { class: "bar", "aria-hidden": "true" }, h("i", { class: scale >= 0 ? "up" : "down", style: scale >= 0 ? "left:50%;width:" + scale + "%" : "left:" + (50 + scale) + "%;width:" + (-scale) + "%" }));
+      var luckCls = Math.abs(p.luck) < 0.0005 ? "zero" : p.luck > 0 ? "pos" : "neg";
+      var wrEl = p.g && p.wr === M.bestWr ? h("span", { class: "best", title: "Highest win rate", text: pct(p.wr) }) : pct(p.wr);
+      var trEl = h("tr", { class: "row" + (open ? " open" : ""), onclick: function () { toggle(p.name); } },
+        h("td", null, tile),
+        h("td", { class: "name" }, h("div", { class: "who" }, h("div", null, btn, sub))),
+        h("td", { class: "c-rating" }, h("span", { class: "rate" }, bar, h("span", { class: "num", text: rnd(p.rating) }))),
+        h("td", { class: "c-g muted", text: p.g }),
+        h("td", { class: "c-w muted", text: p.w }),
+        h("td", { class: "c-wr" }, wrEl),
+        h("td", { class: "c-exp muted", text: pct(p.expR) }),
+        h("td", { class: "c-luck" }, h("span", { class: "luck " + luckCls }, h("span", { class: "ar", "aria-hidden": "true", text: luckCls === "pos" ? "▲" : luckCls === "neg" ? "▼" : "" }), h("span", { text: signed(p.luck) }))));
+      body.appendChild(trEl);
+      if (open) body.appendChild(detailRow(p));
+    });
+  }
+
+  function headCell(c) {
+    var th = h("th", { scope: "col", class: c.cls });
+    if (sortKey === c.key) th.setAttribute("aria-sort", sortDir === 1 ? "ascending" : "descending");
+    th.appendChild(h("button", { type: "button", class: "sort", onclick: function () {
+      if (sortKey === c.key) sortDir = -sortDir; else { sortKey = c.key; sortDir = c.dir; }
+      renderBoard();
+    } }, c.label, h("span", { class: "arrow", "aria-hidden": "true", text: sortKey === c.key ? (sortDir === 1 ? "▲" : "▼") : "▼" })));
+    return th;
+  }
+
+  function toggle(name) { openName = openName === name ? null : name; renderBoard(); }
+
+  function detailRow(p) {
+    var form = h("div", { class: "pips", role: "list", "aria-label": "Last results, oldest to newest" });
+    p.res.slice(-10).forEach(function (w) { form.appendChild(h("span", { class: "pip" + (w ? " w" : ""), role: "listitem", "aria-label": w ? "Win" : "Loss", text: w ? "W" : "L" })); });
+    var left = h("div", null,
+      h("h3", { text: "Last " + Math.min(10, p.res.length) + " games" }), form,
+      h("dl", { class: "dl" },
+        h("dt", { text: "Best streak" }), h("dd", { text: p.bestStreak + (p.bestStreak === 1 ? " win" : " wins") }),
+        h("dt", { text: "Current streak" }), h("dd", { text: p.curStreak ? p.curStreak + (p.curStreak === 1 ? " win" : " wins") : "None" }),
+        h("dt", { text: "First game" }), h("dd", { text: M.games[p.first].id + " · " + fmtDate(M.games[p.first].date) })));
+
+    var others = Object.keys(p.together).sort(function (a, b) { return p.together[b].g - p.together[a].g || a.localeCompare(b); });
+    var t = h("table", { class: "h2h" },
+      h("thead", null, h("tr", null, h("th", { scope: "col", text: "With" }), h("th", { scope: "col", text: "Games" }), h("th", { scope: "col", text: "You won" }), h("th", { scope: "col", text: "They won" }))),
+      h("tbody"));
+    others.forEach(function (n) {
+      var x = p.together[n], q = M.byName[n];
+      t.lastChild.appendChild(h("tr", null, h("td", { text: shortName(q) }), h("td", { text: x.g }),
+        h("td", { class: x.mine > x.theirs ? "lead" : "", text: x.mine }), h("td", { class: x.theirs > x.mine ? "lead" : "", text: x.theirs })));
+    });
+    var right = h("div", null, h("h3", { text: "Head to head, games at the same table" }), others.length ? t : h("p", { class: "hint", text: "No shared games yet." }));
+    return h("tr", { class: "detail" }, h("td", { colspan: 8 }, h("div", { class: "dgrid" }, left, right)));
+  }
+
+  // ---------- rating chart ----------
+  var geo = null, kbIdx = null;
+
+  function niceStep(span) {
+    var steps = [10, 20, 25, 50, 100, 200, 250, 500];
+    for (var i = 0; i < steps.length; i++) if (span / steps[i] <= 6) return steps[i];
+    return 500;
+  }
+
+  function visiblePlayers() { return M.players.filter(function (p) { return !hidden[p.name] && p.first != null; }); }
+
+  function renderLegend() {
+    var box = $("#legend"); clear(box);
+    M.players.slice().sort(function (a, b) { return a.rank - b.rank; }).forEach(function (p) {
+      var chip = h("button", { type: "button", class: "chip", style: "--c:" + colorVar(p), "aria-pressed": hidden[p.name] ? "false" : "true",
+        onclick: function () { hidden[p.name] = !hidden[p.name]; hl = null; renderLegend(); drawChart(); renderTable(); },
+        onmouseenter: function () { setHL(p.name); }, onmouseleave: function () { setHL(null); },
+        onfocus: function () { setHL(p.name); }, onblur: function () { setHL(null); } },
+        h("span", { class: "key", "aria-hidden": "true" }), shortName(p));
+      box.appendChild(chip);
+    });
+  }
+
+  function setHL(name) {
+    hl = name;
+    var svg = $("#chart");
+    Array.prototype.forEach.call(svg.querySelectorAll(".ln, .end"), function (el) {
+      el.classList.toggle("dim", !!name && el.getAttribute("data-p") !== name);
+    });
+  }
+
+  function drawChart() {
+    var svg = $("#chart"), wrap = $("#chartwrap");
+    clear(svg);
+    var N = M.games.length, W = Math.max(300, wrap.clientWidth || 640), H = W < 520 ? 270 : 340;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("height", H);
+    var vis = visiblePlayers();
+    if (N < 2 || !vis.length) {
+      var t = s("text", { x: W / 2, y: H / 2, "text-anchor": "middle" });
+      t.textContent = N < 2 ? "The chart appears after the second game." : "Turn a player on above to see their line.";
+      svg.appendChild(t); geo = null; return;
+    }
+    var m = { l: 46, r: 20, t: 16, b: 46 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var lo = 1000, hi = 1000;
+    vis.forEach(function (p) { for (var i = p.first; i < N; i++) { var v = M.hist[i][p.idx]; if (v < lo) lo = v; if (v > hi) hi = v; } });
+    var step = niceStep(hi - lo);
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    if (hi === lo) hi = lo + step;
+    var x = function (i) { return m.l + (i * iw) / (N - 1); };
+    var y = function (v) { return m.t + ih - ((v - lo) / (hi - lo)) * ih; };
+
+    for (var tv = lo; tv <= hi + 1e-6; tv += step) {
+      svg.appendChild(s("line", { class: tv === 1000 ? "ref" : "grid", x1: m.l, x2: W - m.r, y1: y(tv), y2: y(tv) }));
+      var lab = s("text", { x: m.l - 8, y: y(tv) + 4, "text-anchor": "end" }); lab.textContent = rnd(tv); svg.appendChild(lab);
+    }
+    if (1000 > lo && 1000 < hi && (1000 - lo) % step !== 0) svg.appendChild(s("line", { class: "ref", x1: m.l, x2: W - m.r, y1: y(1000), y2: y(1000) }));
+
+    // day boundaries + date labels, game numbers along the bottom
+    var starts = [];
+    M.games.forEach(function (g, i) { if (i === 0 || g.date !== M.games[i - 1].date) starts.push(i); });
+    starts.forEach(function (i, k) {
+      var x0 = i === 0 ? m.l : (x(i - 1) + x(i)) / 2;
+      var x1 = k + 1 < starts.length ? (x(starts[k + 1] - 1) + x(starts[k + 1])) / 2 : W - m.r;
+      if (i > 0) svg.appendChild(s("line", { class: "day", x1: x0, x2: x0, y1: m.t, y2: m.t + ih + 8 }));
+      if (x1 - x0 >= 44) { var d = s("text", { x: x0 + 5, y: H - 8 }); d.textContent = fmtDate(M.games[i].date); svg.appendChild(d); }
+    });
+    for (var gi = 0; gi < N; gi++) {
+      if (gi === 0 || (gi + 1) % 5 === 0) {
+        var gl = s("text", { x: x(gi), y: m.t + ih + 20, "text-anchor": gi === 0 ? "start" : "middle" });
+        gl.textContent = M.games[gi].id; svg.appendChild(gl);
+      }
+    }
+
+    var cross = s("line", { class: "cross", y1: m.t, y2: m.t + ih, visibility: "hidden" });
+    svg.appendChild(cross);
+
+    var order = vis.slice().sort(function (a, b) { return a.rank - b.rank; });
+    order.forEach(function (p) {
+      var d = "";
+      for (var i = p.first; i < N; i++) d += (i === p.first ? "M" : "L") + x(i).toFixed(1) + " " + y(M.hist[i][p.idx]).toFixed(1);
+      var path = s("path", { class: "ln", d: d, "data-p": p.name }); path.style.stroke = colorVar(p);
+      svg.appendChild(path);
+    });
+    order.forEach(function (p) {
+      var c = s("circle", { class: "end", cx: x(N - 1), cy: y(M.hist[N - 1][p.idx]), r: 4, "data-p": p.name, "stroke-width": 2 });
+      c.style.fill = colorVar(p); c.style.stroke = "var(--surface)"; svg.appendChild(c);
+    });
+    var marks = s("g"); svg.appendChild(marks);
+    var hit = s("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" });
+    svg.appendChild(hit);
+
+    geo = { x: x, y: y, N: N, m: m, W: W, H: H, iw: iw, cross: cross, marks: marks, order: order };
+    hit.addEventListener("pointermove", function (e) {
+      var r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * (W / r.width);
+      showAt(Math.max(0, Math.min(N - 1, Math.round(((px - m.l) / iw) * (N - 1)))));
+    });
+    hit.addEventListener("pointerleave", hideTip);
+    if (hl) setHL(hl);
+    if (kbIdx != null && document.activeElement === svg) showAt(kbIdx);
+  }
+
+  function showAt(i) {
+    if (!geo) return;
+    var g = M.games[i], tip = $("#tip"), G = geo;
+    G.cross.setAttribute("x1", G.x(i)); G.cross.setAttribute("x2", G.x(i)); G.cross.setAttribute("visibility", "visible");
+    clear(G.marks);
+    var rows = G.order.filter(function (p) { return p.first <= i; }).sort(function (a, b) { return M.hist[i][b.idx] - M.hist[i][a.idx]; });
+    rows.forEach(function (p) {
+      var c = s("circle", { cx: G.x(i), cy: G.y(M.hist[i][p.idx]), r: 4, "stroke-width": 2 });
+      c.style.fill = colorVar(p); c.style.stroke = "var(--surface)"; G.marks.appendChild(c);
+    });
+    clear(tip);
+    tip.appendChild(h("div", { class: "th", text: "After " + g.id }));
+    tip.appendChild(h("div", { class: "ts", text: fmtDate(g.date) + (g.winners.length ? " · " + g.winners.map(function (n) { return shortName(M.byName[n]); }).join(", ") + " won" : "") }));
+    rows.forEach(function (p) {
+      tip.appendChild(h("div", { class: "tr" + (g.winners.indexOf(p.name) >= 0 ? " won" : ""), style: "--c:" + colorVar(p) },
+        h("span", { class: "tk" }), h("span", { text: shortName(p) }), h("b", { text: rnd(M.hist[i][p.idx]) })));
+    });
+    tip.hidden = false;
+    var wrapW = $("#chartwrap").clientWidth, px = G.x(i) * (wrapW / G.W), tw = tip.offsetWidth;
+    tip.style.left = (px + 14 + tw > wrapW ? Math.max(4, px - 14 - tw) : px + 14) + "px";
+  }
+  function hideTip() {
+    $("#tip").hidden = true;
+    if (geo) { geo.cross.setAttribute("visibility", "hidden"); clear(geo.marks); }
+  }
+
+  function renderTable() {
+    var box = $("#tscroll"); clear(box);
+    var vis = visiblePlayers().sort(function (a, b) { return a.rank - b.rank; });
+    var head = h("tr", null, h("th", { scope: "col", text: "Game" }), h("th", { scope: "col", text: "Date" }));
+    vis.forEach(function (p) { head.appendChild(h("th", { scope: "col" }, h("span", { class: "key", style: "--c:" + colorVar(p), "aria-hidden": "true" }), shortName(p))); });
+    var tb = h("tbody");
+    for (var i = M.games.length - 1; i >= 0; i--) {
+      var tr = h("tr", null, h("td", { text: M.games[i].id }), h("td", { text: fmtDate(M.games[i].date) }));
+      vis.forEach(function (p) { tr.appendChild(h("td", { text: M.hist[i][p.idx] == null ? "–" : rnd(M.hist[i][p.idx]) })); });
+      tb.appendChild(tr);
+    }
+    box.appendChild(h("table", { class: "mini" }, h("thead", null, head), tb));
+  }
+
+  function setView(v) {
+    view = v;
+    $("#vChart").setAttribute("aria-pressed", v === "chart");
+    $("#vTable").setAttribute("aria-pressed", v === "table");
+    $("#chartwrap").hidden = v !== "chart";
+    $("#tscroll").hidden = v !== "table";
+    if (v === "chart") drawChart();
+  }
+
+  // ---------- recent games ----------
+  function renderGames() {
+    var box = $("#games"); clear(box);
+    var all = M.games.slice().reverse(), shown = showAllGames ? all : all.slice(0, 8);
+    shown.forEach(function (g) {
+      var others = g.players.filter(function (n) { return g.winners.indexOf(n) < 0; });
+      box.appendChild(h("div", { class: "g" },
+        h("span", { class: "gid", text: g.id }),
+        h("span", { class: "gd", text: fmtDate(g.date) }),
+        h("span", { class: "gw" }, h("span", { class: "win", text: g.winners.length ? g.winners.join(", ") : "No winner logged" }), g.winners.length ? " won" : ""),
+        h("span", { class: "gp", text: g.players.length + "-player table · with " + others.map(function (n) { return shortName(M.byName[n]); }).join(", ") })));
+    });
+    var more = $("#moreGames");
+    more.hidden = all.length <= 8;
+    more.textContent = showAllGames ? "Show fewer" : "Show all " + all.length + " games";
+  }
+
+  // ---------- explainer ----------
+  function renderHow() {
+    var box = $("#how"); clear(box);
+    var lg = M.LG ? pct(M.LW / M.LG) : "–";
+    function p(parts) { var el = h("p"); parts.forEach(function (x) { el.appendChild(typeof x === "string" ? document.createTextNode(x) : h("b", { text: x[0] })); }); box.appendChild(el); }
+    p([["Rating"], " starts from a player’s real win rate, then blends in " + PRIOR + " imaginary games played at the group average (" + lg + " right now). Early results get pulled toward 1,000 instead of swinging wildly, so going 2 for 2 doesn’t make anyone a legend. As someone plays more than " + PRIOR + " games, their rating settles on their true win rate. 1,000 means an average win rate, and every percentage point above or below it moves the rating 20 points."]);
+    p([["Expected"], " is the win rate a player would have from table size alone. Each game gives everyone a 1-in-N chance, where N is how many people played, and this is the average across the games they sat in. Someone who often plays 3-player games has a higher expected rate than someone always at 4-player tables."]);
+    p([["Luck"], " is win rate minus expected, in percentage points. Positive means winning more than the table size predicts. It doesn’t isolate skill, since a hot streak shows up here too, but it removes the table-size effect."]);
+    p([["Provisional"], " marks players with fewer than " + PROVISIONAL + " games. Rank order still follows the rating."]);
+  }
+
+  // ---------- render ----------
+  function setData(data, src) {
+    source = src;
+    var prevOpen = openName;
+    M = compute(data);
+    if (prevOpen && !M.byName[prevOpen]) openName = null;
+    renderHeader(); renderFacts(); renderBoard(); renderLegend(); renderGames(); renderHow();
+    renderTable();
+    if (view === "chart") drawChart();
+    var foot = $("#foot");
+    foot.textContent = "Ratings are recomputed from the full game log every time the page loads.";
+  }
+
+  $("#vChart").addEventListener("click", function () { setView("chart"); });
+  $("#vTable").addEventListener("click", function () { setView("table"); });
+  $("#moreGames").addEventListener("click", function () { showAllGames = !showAllGames; renderGames(); });
+  var svgEl = $("#chart");
+  svgEl.addEventListener("keydown", function (e) {
+    if (!geo) return;
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      kbIdx = kbIdx == null ? geo.N - 1 : Math.max(0, Math.min(geo.N - 1, kbIdx + (e.key === "ArrowRight" ? 1 : -1)));
+      showAt(kbIdx);
+    } else if (e.key === "Escape") { kbIdx = null; hideTip(); }
+  });
+  svgEl.addEventListener("blur", function () { kbIdx = null; hideTip(); });
+  var rz; window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(function () { if (M && view === "chart") drawChart(); }, 80); });
+
+  // ---------- boot ----------
+  var snap = window.MAHJONG_SNAPSHOT || { games: [] };
+  setData(snap, "snapshot");
+
+  var url = (window.MAHJONG_CONFIG || {}).sheetCsvUrl;
+  if (url) {
+    fetch(url, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (text) {
+        var d = parseLog(text);
+        if (!d.games.length) throw new Error("No games in the sheet");
+        var t = new Date();
+        loadedAt = t.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+        setData(d, "live");
+      })
+      .catch(function (err) { liveFailed = true; if (window.console) console.warn("Live sheet unavailable:", err); renderHeader(); });
+  }
+})();
+</script>
+</body>
+</html>
