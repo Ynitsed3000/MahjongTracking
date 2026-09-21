@@ -4,7 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mahjong Leaderboard</title>
-<meta name="description" content="Win rates and ratings for the mahjong group.">
+<meta name="description" content="Live standings, ratings and game nights for our mahjong group.">
+<meta name="theme-color" content="#0e6b4d">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mahjong Leaderboard">
+<meta property="og:description" content="Live standings, ratings and game nights for our mahjong group.">
+<meta property="og:url" content="https://ynitsed3000.github.io/MahjongTracking/">
+<meta property="og:image" content="https://ynitsed3000.github.io/MahjongTracking/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='24' height='28' rx='5' fill='%230e6b4d'/%3E%3Crect x='4' y='2' width='24' height='24' rx='5' fill='%23fbf8ee'/%3E%3Ctext x='16' y='20' font-size='16' text-anchor='middle' font-weight='700' fill='%23c23b26'%3E%E4%B8%AD%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +34,7 @@
     --red: #b8351f;
     --red-soft: #f6dcd6;
     --focus: #0e6b4d;
+    --on-jade: #ffffff;
 
     --tile-face: #fbf8ee;
     --tile-ink: #1a231e;
@@ -55,6 +65,7 @@
       --red: #ff8168;
       --red-soft: #3d201b;
       --focus: #4cc79a;
+      --on-jade: #06231a;
       --tile-shadow: rgba(0, 0, 0, .5);
       --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
       --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
@@ -76,6 +87,7 @@
     --red: #ff8168;
     --red-soft: #3d201b;
     --focus: #4cc79a;
+      --on-jade: #06231a;
     --tile-shadow: rgba(0, 0, 0, .5);
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
     --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
@@ -113,7 +125,7 @@
   .cjk { font-family: var(--cjk); font-weight: 700; color: #c23b26; font-size: 32px; line-height: 1; }
 
   /* ---------- header ---------- */
-  .top { display: flex; align-items: center; gap: 18px; }
+  .top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 20px; }
   h1 {
     margin: 0; font: 800 clamp(30px, 6vw, 48px)/1.05 var(--display);
     letter-spacing: -.02em; text-wrap: balance;
@@ -124,14 +136,7 @@
   .status.live .dot { background: var(--jade); }
   .status.warn .dot { background: var(--red); }
 
-  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); border-block: 1px solid var(--line); }
-  .fact { padding: 14px 0; display: grid; gap: 2px; }
-  .fact + .fact { border-top: 1px solid var(--line); }
-  @media (min-width: 720px) {
-    .fact { padding: 16px 20px; }
-    .fact:first-child { padding-left: 0; }
-    .fact + .fact { border-top: 0; border-left: 1px solid var(--line); }
-  }
+
   .fact .k { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
   .fact .v { font: 700 20px/1.25 var(--display); letter-spacing: -.01em; }
   .fact .n { font-size: 13px; color: var(--ink-2); }
@@ -307,13 +312,90 @@
   .note { margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--red-soft); color: var(--ink); font-size: 14px; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  /* ================= demo additions ================= */
+  .brand { display: flex; align-items: center; gap: 18px; min-width: 0; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: var(--jade); color: var(--on-jade); font-weight: 600; text-decoration: none; box-shadow: 0 3px 0 rgba(0,0,0,.2); }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+
+  .linkbtn { background: none; border: 0; padding: 0 2px; color: var(--jade); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
+  .status .linkbtn { margin-left: 2px; }
+
+  /* filters: one row above everything they scope */
+  .toolbar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px 28px; }
+  .fld { display: grid; gap: 5px; }
+  .fld > span { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+  select {
+    font: inherit; color: var(--ink); background-color: var(--surface);
+    border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 34px 7px 12px; min-width: 170px;
+    appearance: none; -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+    background-position: calc(100% - 17px) 55%, calc(100% - 12px) 55%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+    cursor: pointer;
+  }
+  .scope { margin: 0; flex: 1 1 260px; align-self: center; font-size: 13.5px; color: var(--ink-2); }
+
+  /* facts: 2 columns on phones, 3 on desktop, borders per cell so a short last row stays tidy */
+  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+  .fact { padding: 14px 12px 14px 0; border-top: 1px solid var(--line); display: grid; gap: 2px; align-content: start; }
+  .fact:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--line); }
+  .fact .v { font-size: 17px; }
+  @media (min-width: 720px) {
+    .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .fact, .fact:nth-child(even) { padding: 16px 20px; border-left: 1px solid var(--line); }
+    .fact:nth-child(3n+1) { padding-left: 0; border-left: 0; }
+    .fact .v { font-size: 20px; }
+  }
+
+  /* rating change since previous game night */
+  .chg { display: inline-block; min-width: 4.6ch; text-align: right; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+  .chg.up { color: var(--jade); }
+  .chg.down { color: var(--red); }
+  .emptyrow td, .empty { padding: 28px 16px; text-align: center; color: var(--ink-3); }
+
+  /* game log */
+  .flat-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+  .nt { display: grid; gap: 6px 16px; padding: 13px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .nt .nd { font-weight: 700; }
+  .nt .ns { color: var(--ink-3); font-size: 13.5px; }
+  .wins { display: flex; flex-wrap: wrap; gap: 6px; }
+  .wins span { font-size: 13.5px; padding: 1px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .wins span.mvp { background: var(--jade-soft); color: var(--jade); font-weight: 700; }
+  @media (min-width: 720px) { .nt { grid-template-columns: 140px 150px minmax(0, 1fr); } }
+  .more.small { margin-top: 0; padding: 5px 11px; font-size: 13.5px; }
+
+  /* head-to-head grid */
+  .mscroll { overflow-x: auto; padding: 4px 14px 18px; }
+  .mx { width: auto; min-width: 100%; border-collapse: separate; border-spacing: 3px; }
+  .mx th, .mx td { padding: 9px 8px; text-align: center; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; border-radius: 6px; }
+  .mx thead th { font-size: 12px; font-weight: 600; letter-spacing: .03em; color: var(--ink-3); }
+  .mx tbody th { text-align: left; font-weight: 600; padding-left: 10px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  .mx td { background: var(--surface-2); color: var(--ink); }
+  .mx td.self { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+  .mx td.none { background: transparent; color: var(--ink-3); }
+
+  /* player detail extras */
+  .more.copy { margin-top: 14px; }
+
+  .toolbar .seg button { padding: 8px 14px; }
+
+  @media (max-width: 719px) {
+    .chg { min-width: 3.3ch; font-size: 12px; }
+    #board > thead > tr > th:not(:first-child):not(:last-child),
+    #board > tbody > tr.row > td:not(:first-child):not(:last-child) { padding-inline: 5px; }
+    .rate { gap: 6px; }
+    .status { flex-wrap: wrap; }
+  }
+
 </style>
 </head>
 <body>
 <noscript><p style="padding:16px">This page needs JavaScript to show the leaderboard.</p></noscript>
 <div class="page">
-  <header>
-    <div class="top">
+  <header class="top">
+    <div class="brand">
       <div class="tile tile-lg" aria-hidden="true"><span class="cjk">中</span></div>
       <div>
         <h1>Mahjong Leaderboard</h1>
@@ -321,16 +403,29 @@
         <p class="status" id="status"></p>
       </div>
     </div>
+    <a class="btn" id="logBtn" href="#" target="_blank" rel="noopener" hidden>Log a game</a>
   </header>
 
   <div id="dataNote"></div>
+
+  <div class="toolbar" role="group" aria-label="Filters">
+    <label class="fld" for="period"><span>Period</span><select id="period"></select></label>
+    <div class="fld">
+      <span id="basisLbl">Rating</span>
+      <div class="seg" role="group" aria-labelledby="basisLbl">
+        <button type="button" id="bTable" aria-pressed="true">Table-adjusted</button>
+        <button type="button" id="bGroup" aria-pressed="false">Group average</button>
+      </div>
+    </div>
+    <p class="scope" id="scope" hidden></p>
+  </div>
 
   <div class="facts" id="facts"></div>
 
   <section class="panel" aria-labelledby="h-board">
     <div class="panel-head">
       <h2 id="h-board">Standings</h2>
-      <p class="hint">Ranked by rating. Select a player for details.</p>
+      <p class="hint" id="boardHint"></p>
     </div>
     <div class="scroll">
       <table id="board">
@@ -343,7 +438,7 @@
   <section class="panel" aria-labelledby="h-chart">
     <div class="panel-head">
       <h2 id="h-chart">Rating history</h2>
-      <p class="hint">Rating after each game. The darker line is 1,000, the group average.</p>
+      <p class="hint" id="chartHint"></p>
     </div>
     <div class="chart-body">
       <div class="chart-bar">
@@ -361,10 +456,24 @@
     </div>
   </section>
 
-  <section class="flat" aria-labelledby="h-games">
-    <h2 id="h-games">Recent games</h2>
-    <div class="games" id="games"></div>
-    <button type="button" class="more" id="moreGames" hidden></button>
+  <section class="flat" aria-labelledby="h-log">
+    <div class="flat-head">
+      <h2 id="h-log">Game log</h2>
+      <div class="seg" role="group" aria-label="Group games by">
+        <button type="button" id="lNights" aria-pressed="true">By night</button>
+        <button type="button" id="lGames" aria-pressed="false">By game</button>
+      </div>
+    </div>
+    <div class="games" id="log"></div>
+    <button type="button" class="more" id="moreLog" hidden></button>
+  </section>
+
+  <section class="panel" aria-labelledby="h-h2h">
+    <div class="panel-head">
+      <h2 id="h-h2h">Head to head</h2>
+      <p class="hint">Row player's wins, then column player's wins, in games they both played. Green means the row player wins more often at those tables.</p>
+    </div>
+    <div class="mscroll" id="matrix"></div>
   </section>
 
   <details class="how">
@@ -381,11 +490,14 @@
 (function () {
   "use strict";
   var $ = function (s) { return document.querySelector(s); };
-  var PRIOR = 10;            // phantom games in the rating formula
+  var CFG = window.MAHJONG_CONFIG || {};
+  var PRIOR = 10;            // imaginary games in the rating formula
   var PROVISIONAL = PRIOR;   // fewer games than this = provisional
   var MAX_SERIES = 8;
+  var CACHE_KEY = "mahjong-leaderboard-cache-v1";
+  var REFRESH_AFTER_MS = 5 * 60 * 1000;
 
-  // ---------- tiny DOM helper (text always goes through textContent) ----------
+  // ---------- tiny DOM helpers (text always goes through textContent) ----------
   function h(tag, attrs) {
     var el = document.createElement(tag);
     if (attrs) for (var k in attrs) {
@@ -412,14 +524,24 @@
 
   // ---------- formatting ----------
   var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  function fmtDate(iso, withYear) {
+  var MONTHS_LONG = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var WEEKDAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function parseIso(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
-    if (!m) return iso || "";
-    return MONTHS[+m[2] - 1] + " " + (+m[3]) + (withYear ? ", " + m[1] : "");
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
   }
+  function isoOf(d) { return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function fmtDate(iso, withYear) {
+    var d = parseIso(iso);
+    return d ? MONTHS[d.getMonth()] + " " + d.getDate() + (withYear ? ", " + d.getFullYear() : "") : (iso || "");
+  }
+  function fmtDay(iso) { var d = parseIso(iso); return d ? WEEKDAYS[d.getDay()] + ", " + MONTHS[d.getMonth()] + " " + d.getDate() : (iso || ""); }
+  function fmtTime(d) { var hr = d.getHours(); return ((hr % 12) || 12) + ":" + ("0" + d.getMinutes()).slice(-2) + " " + (hr < 12 ? "AM" : "PM"); }
+  function fmtStamp(d) { return MONTHS[d.getMonth()] + " " + d.getDate() + ", " + fmtTime(d); }
   function pct(v) { return (v * 100).toFixed(1) + "%"; }
   function signed(v) { var r = Math.round(v * 1000) / 10; return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1); }
   function rnd(v) { return Math.round(v).toLocaleString("en-US"); }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
 
   // ---------- data: parse the published Log CSV ----------
   function parseCsv(text) {
@@ -445,8 +567,7 @@
     if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(v))) return m[1] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[3]).slice(-2);
     if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(v))) return m[3] + "-" + ("0" + m[1]).slice(-2) + "-" + ("0" + m[2]).slice(-2);
     var d = new Date(v);
-    if (!isNaN(d)) return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
-    return v;
+    return isNaN(d) ? v : isoOf(d);
   }
   function parseLog(text) {
     var rows = parseCsv(text), hi = -1, i;
@@ -469,20 +590,38 @@
     return { games: games };
   }
 
+  // Games are ordered by Game ID number (G1, G2, ...), not row position, so a game that gets
+  // rewritten lower down the Log after an edit keeps its place in the history.
+  function sortGames(games) {
+    var items = games.map(function (g, i) { var m = /(\d+)/.exec(g.id); return { g: g, i: i, n: m ? +m[1] : null }; });
+    if (items.some(function (x) { return x.n == null; })) return games;
+    items.sort(function (a, b) { return a.n - b.n || a.i - b.i; });
+    return items.map(function (x) { return x.g; });
+  }
+
   // ---------- model ----------
   function rate(w, g, base) { return 1000 + ((w + PRIOR * base) / (g + PRIOR) - base) * 2000; }
 
-  function compute(data) {
-    var games = data.games, byName = {}, list = [], LW = 0, LG = 0, hist = [];
+  // basis "table" (default): prior at each player's own expected win rate (table-size adjusted).
+  // basis "group": prior at the group's overall win rate (matches the spreadsheet's Stats tab).
+  function compute(games, basis, colorOrder) {
+    var byName = {}, list = [], LW = 0, LG = 0, hist = [];
     games.forEach(function (gm) {
       gm.players.forEach(function (n) {
         if (!byName[n]) {
-          byName[n] = { name: n, idx: list.length, g: 0, w: 0, exp: 0, res: [], first: null, together: {} };
+          byName[n] = { name: n, idx: list.length, cidx: colorOrder.indexOf(n), g: 0, w: 0, exp: 0, res: [], first: null, together: {} };
           list.push(byName[n]);
         }
       });
     });
+    var nights = [], nightBy = {};
     games.forEach(function (gm, gi) {
+      var night = nightBy[gm.date];
+      if (!night) { night = nightBy[gm.date] = { date: gm.date, games: [], players: {}, wins: {} }; nights.push(night); }
+      night.games.push(gm);
+      gm.players.forEach(function (n) { night.players[n] = 1; });
+      gm.winners.forEach(function (n) { night.wins[n] = (night.wins[n] || 0) + 1; });
+
       gm.players.forEach(function (n) {
         var p = byName[n], won = gm.winners.indexOf(n) >= 0;
         p.g++; p.exp += 1 / gm.players.length; p.res.push(won);
@@ -496,79 +635,163 @@
         });
       });
       var b = LG ? LW / LG : 0;
-      hist.push(list.map(function (p) { return p.g ? rate(p.w, p.g, b) : null; }));
+      hist.push(list.map(function (p) { return p.g ? rate(p.w, p.g, basis === "table" ? p.exp / p.g : b) : null; }));
     });
+    nights.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+
     var base = LG ? LW / LG : 0;
     list.forEach(function (p) {
       p.wr = p.g ? p.w / p.g : 0;
       p.expR = p.g ? p.exp / p.g : 0;
       p.luck = p.wr - p.expR;
-      p.rating = rate(p.w, p.g, base);
-      var best = 0, run = 0;
-      p.res.forEach(function (x) { run = x ? run + 1 : 0; if (run > best) best = run; });
-      p.bestStreak = best; p.curStreak = run;
+      p.base = basis === "table" ? p.expR : base;
+      p.rating = rate(p.w, p.g, p.base);
+      var bw = 0, rw = 0, bl = 0, rl = 0;
+      p.res.forEach(function (x) {
+        rw = x ? rw + 1 : 0; rl = x ? 0 : rl + 1;
+        if (rw > bw) bw = rw; if (rl > bl) bl = rl;
+      });
+      p.bestWin = bw; p.curWin = rw; p.bestLoss = bl; p.curLoss = rl;
     });
     var ranked = list.slice().sort(function (a, b) { return b.rating - a.rating || b.g - a.g; });
     ranked.forEach(function (p, i) { p.rank = i + 1; });
     var bestWr = -1;
     list.forEach(function (p) { if (p.g && p.wr > bestWr) bestWr = p.wr; });
-    return { games: games, players: list, byName: byName, hist: hist, base: base, LW: LW, LG: LG, bestWr: bestWr };
+
+    // change since the end of the previous game night
+    var prevEnd = -1, prevDate = null;
+    if (nights.length >= 2) {
+      var lastDate = nights[nights.length - 1].date;
+      for (var i = games.length - 1; i >= 0; i--) { if (games[i].date < lastDate) { prevEnd = i; prevDate = games[i].date; break; } }
+    }
+    list.forEach(function (p) {
+      var a = prevEnd >= 0 ? hist[prevEnd][p.idx] : null, z = hist.length ? hist[hist.length - 1][p.idx] : null;
+      p.delta = a != null && z != null ? z - a : null;
+    });
+    return { games: games, players: list, byName: byName, hist: hist, base: base, LW: LW, LG: LG, bestWr: bestWr, nights: nights, prevEnd: prevEnd, prevDate: prevDate, basis: basis };
   }
 
-  function colorVar(p) { return p.idx < MAX_SERIES ? "var(--s" + (p.idx + 1) + ")" : "var(--s-other)"; }
+  function colorVar(p) { return p.cidx >= 0 && p.cidx < MAX_SERIES ? "var(--s" + (p.cidx + 1) + ")" : "var(--s-other)"; }
   function shortName(p) {
     var first = p.name.split(/\s+/)[0];
     var clash = M.players.some(function (q) { return q !== p && q.name.split(/\s+/)[0] === first; });
     return clash ? p.name : first;
   }
+  function names(list) { return list.map(shortName).join(", "); }
 
   // ---------- state ----------
-  var M = null;
+  var ALL = [], ORDER = [], M = null;
+  var period = "all", basis = "table";
   var sortKey = "rating", sortDir = -1, openName = null;
-  var hidden = {}, view = "chart", showAllGames = false, hl = null, source = "snapshot", loadedAt = null, liveFailed = false;
+  var hidden = {}, view = "chart", logView = "nights", showAllLog = false, hl = null;
+  var src = "snapshot", stamp = null, busy = false, failed = false, lastLoadMs = 0, pendingScroll = false;
 
-  // ---------- header, facts ----------
+  // ---------- URL state (shareable links) ----------
+  function readHash() {
+    var out = {};
+    (location.hash || "").replace(/^#/, "").split("&").forEach(function (kv) {
+      if (!kv) return;
+      var i = kv.indexOf("=");
+      try { out[decodeURIComponent(i < 0 ? kv : kv.slice(0, i))] = i < 0 ? "" : decodeURIComponent(kv.slice(i + 1)); } catch (e) {}
+    });
+    return out;
+  }
+  function writeHash() {
+    var parts = [];
+    if (period !== "all") parts.push("period=" + encodeURIComponent(period));
+    if (basis === "group") parts.push("rating=group");
+    if (openName) parts.push("player=" + encodeURIComponent(openName));
+    try { history.replaceState(null, "", parts.length ? "#" + parts.join("&") : location.pathname + location.search); } catch (e) {}
+  }
+
+  // ---------- period filter ----------
+  function buildPeriods() {
+    var sel = $("#period"); clear(sel);
+    var opts = [["all", "All time"], ["30d", "Last 30 days"]], months = {};
+    ALL.forEach(function (g) { var m = (g.date || "").slice(0, 7); if (/^\d{4}-\d{2}$/.test(m)) months[m] = 1; });
+    Object.keys(months).sort().reverse().forEach(function (m) { opts.push([m, MONTHS_LONG[+m.slice(5) - 1] + " " + m.slice(0, 4)]); });
+    opts.forEach(function (o) { sel.appendChild(h("option", { value: o[0], text: o[1] })); });
+    if (!opts.some(function (o) { return o[0] === period; })) period = "all";
+    sel.value = period;
+  }
+  function periodGames() {
+    if (period === "all") return ALL;
+    if (period === "30d") { var d = new Date(); d.setDate(d.getDate() - 30); var c = isoOf(d); return ALL.filter(function (g) { return g.date >= c; }); }
+    return ALL.filter(function (g) { return (g.date || "").slice(0, 7) === period; });
+  }
+
+  // ---------- header, status ----------
   function renderHeader() {
-    var last = M.games.length ? M.games[M.games.length - 1].date : "";
-    $("#meta").textContent = M.games.length + " games · " + M.players.length + " players" + (last ? " · last played " + fmtDate(last, true) : "");
-    var st = $("#status");
-    clear(st);
+    var last = ALL.length ? ALL[ALL.length - 1].date : "";
+    $("#meta").textContent = plural(ALL.length, "game") + " · " + plural(ORDER.length, "player") + (last ? " · last played " + fmtDate(last, true) : "");
+    renderStatus();
+
+    var bad = ALL.filter(function (g) { return g.winners.length !== 1; });
+    var note = $("#dataNote"); clear(note);
+    if (bad.length) {
+      note.appendChild(h("p", { class: "note", text: "Check the sheet: " + bad.slice(0, 4).map(function (g) { return g.id + " has " + plural(g.winners.length, "winner"); }).join(", ") + (bad.length > 4 ? ", and " + (bad.length - 4) + " more" : "") + ". Each game should have exactly one." }));
+    }
+    var btn = $("#logBtn");
+    if (CFG.formUrl) { btn.href = CFG.formUrl; btn.hidden = false; } else btn.hidden = true;
+  }
+
+  function renderStatus() {
+    var st = $("#status"); clear(st);
     var cls = "status", msg;
-    if (source === "live") { cls += " live"; msg = "Live from the sheet" + (loadedAt ? " · loaded " + loadedAt : ""); }
-    else if (liveFailed) { cls += " warn"; msg = "Couldn’t reach the sheet, showing a saved copy"; }
+    if (busy) msg = (src === "live" ? "Live from the sheet" : src === "cached" ? "Showing data from your last visit" : "Showing a saved copy") + " · updating…";
+    else if (failed) { cls += " warn"; msg = src === "cached" && stamp ? "Couldn’t reach the sheet. Showing data from " + fmtStamp(stamp) : "Couldn’t reach the sheet, showing a saved copy"; }
+    else if (src === "live") { cls += " live"; msg = "Live from the sheet · loaded " + fmtTime(stamp); }
     else msg = "Saved copy of the game log";
     st.className = cls;
     st.appendChild(h("span", { class: "dot" }));
     st.appendChild(h("span", { text: msg }));
-
-    var bad = M.games.filter(function (g) { return g.winners.length !== 1; });
-    var note = $("#dataNote");
-    clear(note);
-    if (bad.length) {
-      note.appendChild(h("p", { class: "note", text: "Check the sheet: " + bad.slice(0, 4).map(function (g) { return g.id + " has " + g.winners.length + " winner" + (g.winners.length === 1 ? "" : "s"); }).join(", ") + (bad.length > 4 ? ", and " + (bad.length - 4) + " more" : "") + ". Each game should have exactly one." }));
-    }
+    if (CFG.sheetCsvUrl && !busy) st.appendChild(h("button", { type: "button", class: "linkbtn", text: "Refresh", onclick: load }));
   }
 
+  function renderToolbar() {
+    $("#bGroup").setAttribute("aria-pressed", basis === "group");
+    $("#bTable").setAttribute("aria-pressed", basis === "table");
+    var el = $("#scope");
+    if (period === "all") { el.hidden = true; el.textContent = ""; return; }
+    el.hidden = false;
+    el.textContent = "Showing " + M.games.length + " of " + ALL.length + " games. Ratings and everything below use only these games.";
+  }
+
+  // ---------- facts / awards ----------
   function renderFacts() {
     var box = $("#facts"); clear(box);
     var ps = M.players.filter(function (p) { return p.g; });
     if (!ps.length) return;
     function fact(k, v, n) { box.appendChild(h("div", { class: "fact" }, h("span", { class: "k", text: k }), h("span", { class: "v", text: v }), h("span", { class: "n", text: n }))); }
+    function maxOf(key) { return Math.max.apply(null, ps.map(function (p) { return p[key]; })); }
 
-    var bs = Math.max.apply(null, ps.map(function (p) { return p.bestStreak; }));
-    var bsP = ps.filter(function (p) { return p.bestStreak === bs; });
-    var cur = bsP.filter(function (p) { return p.curStreak === bs; }).length;
-    fact("Longest win streak", bs + (bs === 1 ? " win" : " wins") + " in a row", bsP.map(shortName).join(", ") + (cur ? " · still going" : ""));
+    var bw = maxOf("bestWin"), bwP = ps.filter(function (p) { return p.bestWin === bw; });
+    fact("Longest win streak", plural(bw, "win") + " in a row", names(bwP) + (bwP.some(function (p) { return p.curWin === bw; }) ? " · still going" : ""));
 
-    var mg = Math.max.apply(null, ps.map(function (p) { return p.g; }));
-    var mgP = ps.filter(function (p) { return p.g === mg; });
-    fact("Most games", mg + " games", mgP.map(shortName).join(", "));
+    var bl = maxOf("bestLoss"), blP = ps.filter(function (p) { return p.bestLoss === bl; });
+    fact("Longest cold streak", plural(bl, "loss", "losses") + " in a row", names(blP) + (blP.some(function (p) { return p.curLoss === bl; }) ? " · still going" : ""));
+
+    var best = 0, bestList = [];
+    M.nights.forEach(function (n) {
+      Object.keys(n.wins).forEach(function (nm) {
+        var w = n.wins[nm];
+        if (w > best) { best = w; bestList = []; }
+        if (w === best) bestList.push({ p: M.byName[nm], date: n.date });
+      });
+    });
+    if (best) fact("Best night", plural(best, "win") + " in one night", bestList.slice(0, 2).map(function (e) { return shortName(e.p) + " · " + fmtDate(e.date); }).join(", ") + (bestList.length > 2 ? " and " + (bestList.length - 2) + " more" : ""));
+
+    var mg = maxOf("g"), mgP = ps.filter(function (p) { return p.g === mg; });
+    fact("Most games", plural(mg, "game"), names(mgP));
 
     var elig = ps.filter(function (p) { return p.g >= PROVISIONAL; });
     if (elig.length) {
       var top = elig.slice().sort(function (a, b) { return b.luck - a.luck; })[0];
       fact("Beating the odds", signed(top.luck) + " pts", shortName(top) + " wins more than table size predicts");
     }
+
+    var climber = ps.filter(function (p) { return p.delta != null && Math.round(p.delta) >= 1; }).sort(function (a, b) { return b.delta - a.delta; })[0];
+    if (climber) fact("Biggest climb", "+" + rnd(climber.delta) + " rating", shortName(climber) + " since " + fmtDate(M.prevDate));
   }
 
   // ---------- leaderboard ----------
@@ -582,41 +805,46 @@
   ];
 
   function renderBoard() {
+    var hint = "Ranked by rating. Select a player for details.";
+    if (M.prevDate && M.players.some(function (p) { return p.delta != null; })) hint = "Ranked by rating. Arrows show the change since " + fmtDate(M.prevDate) + ", the previous game night. Select a player for details.";
+    $("#boardHint").textContent = hint;
+
     var head = $("#boardHead"); clear(head);
     var tr = h("tr", null, h("th", { scope: "col", "aria-label": "Rank" }));
     tr.appendChild(headCell({ key: "name", label: "Player", cls: "name", dir: 1 }));
     COLS.forEach(function (c) { tr.appendChild(headCell(c)); });
     head.appendChild(tr);
 
+    var body = $("#boardBody"); clear(body);
+    if (!M.players.length) { body.appendChild(h("tr", { class: "emptyrow" }, h("td", { colspan: 8, text: "No games in this period." }))); return; }
+
     var rows = M.players.slice().sort(function (a, b) {
-      var av = sortKey === "name" ? a.name.toLowerCase() : a[sortKey === "rating" ? "rating" : sortKey];
-      var bv = sortKey === "name" ? b.name.toLowerCase() : b[sortKey === "rating" ? "rating" : sortKey];
+      var av = sortKey === "name" ? a.name.toLowerCase() : a[sortKey], bv = sortKey === "name" ? b.name.toLowerCase() : b[sortKey];
       if (av < bv) return -1 * sortDir; if (av > bv) return 1 * sortDir;
       return a.rank - b.rank;
     });
-
-    var body = $("#boardBody"); clear(body);
     rows.forEach(function (p) {
       var open = openName === p.name;
       var tile = h("span", { class: "tile" + (p.rank === 1 ? " first" : ""), "aria-label": "Rank " + p.rank, text: p.rank });
       var btn = h("button", { type: "button", class: "pname", "aria-expanded": open ? "true" : "false", text: p.name, onclick: function (e) { e.stopPropagation(); toggle(p.name); } });
       var sub = h("span", { class: "sub" },
-        h("span", { class: "sub-m", text: p.g + (p.g === 1 ? " game" : " games") + " · " + p.w + (p.w === 1 ? " win" : " wins") }),
-        p.g < PROVISIONAL ? h("span", { class: "tag", title: "Fewer than " + PROVISIONAL + " games, so the rating leans on the group average", text: "Provisional" }) : null);
+        h("span", { class: "sub-m", text: plural(p.g, "game") + " · " + plural(p.w, "win") }),
+        p.g < PROVISIONAL ? h("span", { class: "tag", title: "Fewer than " + PROVISIONAL + " games, so the rating leans on its starting assumption", text: "Provisional" }) : null);
       var scale = Math.max(-1, Math.min(1, (p.rating - 1000) / 250)) * 50;
       var bar = h("span", { class: "bar", "aria-hidden": "true" }, h("i", { class: scale >= 0 ? "up" : "down", style: scale >= 0 ? "left:50%;width:" + scale + "%" : "left:" + (50 + scale) + "%;width:" + (-scale) + "%" }));
+      var d = p.delta != null ? Math.round(p.delta) : 0;
+      var chg = d ? h("span", { class: "chg " + (d > 0 ? "up" : "down"), title: "Change since " + fmtDate(M.prevDate), "aria-label": (d > 0 ? "Up " : "Down ") + Math.abs(d) + " since " + fmtDate(M.prevDate), text: (d > 0 ? "▲" : "▼") + Math.abs(d) }) : h("span", { class: "chg", "aria-hidden": "true" });
       var luckCls = Math.abs(p.luck) < 0.0005 ? "zero" : p.luck > 0 ? "pos" : "neg";
-      var wrEl = p.g && p.wr === M.bestWr ? h("span", { class: "best", title: "Highest win rate", text: pct(p.wr) }) : pct(p.wr);
-      var trEl = h("tr", { class: "row" + (open ? " open" : ""), onclick: function () { toggle(p.name); } },
+      var wrEl = p.wr === M.bestWr ? h("span", { class: "best", title: "Highest win rate", text: pct(p.wr) }) : pct(p.wr);
+      body.appendChild(h("tr", { class: "row" + (open ? " open" : ""), "data-player": p.name, onclick: function () { toggle(p.name); } },
         h("td", null, tile),
         h("td", { class: "name" }, h("div", { class: "who" }, h("div", null, btn, sub))),
-        h("td", { class: "c-rating" }, h("span", { class: "rate" }, bar, h("span", { class: "num", text: rnd(p.rating) }))),
+        h("td", { class: "c-rating" }, h("span", { class: "rate" }, bar, chg, h("span", { class: "num", text: rnd(p.rating) }))),
         h("td", { class: "c-g muted", text: p.g }),
         h("td", { class: "c-w muted", text: p.w }),
         h("td", { class: "c-wr" }, wrEl),
         h("td", { class: "c-exp muted", text: pct(p.expR) }),
-        h("td", { class: "c-luck" }, h("span", { class: "luck " + luckCls }, h("span", { class: "ar", "aria-hidden": "true", text: luckCls === "pos" ? "▲" : luckCls === "neg" ? "▼" : "" }), h("span", { text: signed(p.luck) }))));
-      body.appendChild(trEl);
+        h("td", { class: "c-luck" }, h("span", { class: "luck " + luckCls }, h("span", { class: "ar", "aria-hidden": "true", text: luckCls === "pos" ? "▲" : luckCls === "neg" ? "▼" : "" }), h("span", { text: signed(p.luck) })))));
       if (open) body.appendChild(detailRow(p));
     });
   }
@@ -631,17 +859,31 @@
     return th;
   }
 
-  function toggle(name) { openName = openName === name ? null : name; renderBoard(); }
+  function toggle(name) { openName = openName === name ? null : name; writeHash(); renderBoard(); }
+
+  function copyLink(btn) {
+    var url = location.href, done = function () { btn.textContent = "Link copied"; setTimeout(function () { btn.textContent = "Copy link to this player"; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { window.prompt("Copy this link", url); });
+    else window.prompt("Copy this link", url);
+  }
 
   function detailRow(p) {
     var form = h("div", { class: "pips", role: "list", "aria-label": "Last results, oldest to newest" });
     p.res.slice(-10).forEach(function (w) { form.appendChild(h("span", { class: "pip" + (w ? " w" : ""), role: "listitem", "aria-label": w ? "Win" : "Loss", text: w ? "W" : "L" })); });
-    var left = h("div", null,
-      h("h3", { text: "Last " + Math.min(10, p.res.length) + " games" }), form,
-      h("dl", { class: "dl" },
-        h("dt", { text: "Best streak" }), h("dd", { text: p.bestStreak + (p.bestStreak === 1 ? " win" : " wins") }),
-        h("dt", { text: "Current streak" }), h("dd", { text: p.curStreak ? p.curStreak + (p.curStreak === 1 ? " win" : " wins") : "None" }),
-        h("dt", { text: "First game" }), h("dd", { text: M.games[p.first].id + " · " + fmtDate(M.games[p.first].date) })));
+
+    var mates = Object.keys(p.together).filter(function (n) { return p.together[n].g >= 3; });
+    var nemesis = mates.filter(function (n) { return p.together[n].theirs > 0; }).sort(function (a, b) { return p.together[b].theirs / p.together[b].g - p.together[a].theirs / p.together[a].g || p.together[b].g - p.together[a].g; })[0];
+    var charm = mates.filter(function (n) { return p.together[n].mine > 0; }).sort(function (a, b) { return p.together[b].mine / p.together[b].g - p.together[a].mine / p.together[a].g || p.together[b].g - p.together[a].g; })[0];
+
+    var dl = h("dl", { class: "dl" },
+      h("dt", { text: "Best streak" }), h("dd", { text: plural(p.bestWin, "win") }),
+      h("dt", { text: "Current streak" }), h("dd", { text: p.curWin ? plural(p.curWin, "win") : p.curLoss ? plural(p.curLoss, "loss", "losses") : "None" }),
+      h("dt", { text: "First game" }), h("dd", { text: M.games[p.first].id + " · " + fmtDate(M.games[p.first].date) }));
+    if (nemesis) { var tn = p.together[nemesis]; dl.appendChild(h("dt", { text: "Nemesis", title: "Wins the biggest share of the games you both play in" })); dl.appendChild(h("dd", { text: shortName(M.byName[nemesis]) + " · won " + tn.theirs + " of " + tn.g + " together" })); }
+    if (charm) { var tc = p.together[charm]; dl.appendChild(h("dt", { text: "Lucky charm", title: "The table-mate you win the biggest share of games with" })); dl.appendChild(h("dd", { text: shortName(M.byName[charm]) + " · " + shortName(p) + " won " + tc.mine + " of " + tc.g + " together" })); }
+
+    var copy = h("button", { type: "button", class: "more small copy", text: "Copy link to this player", onclick: function (e) { copyLink(e.currentTarget); } });
+    var left = h("div", null, h("h3", { text: "Last " + Math.min(10, p.res.length) + " games" }), form, dl, copy);
 
     var others = Object.keys(p.together).sort(function (a, b) { return p.together[b].g - p.together[a].g || a.localeCompare(b); });
     var t = h("table", { class: "h2h" },
@@ -654,7 +896,7 @@
         h("td", { class: "muted", text: x.g - x.mine - x.theirs })));
     });
     var right = h("div", null, h("h3", { text: "Head to head, games at the same table" }),
-      others.length ? h("p", { class: "hint h2h-note", text: "Games played at the same table, and who won them. \u201cOthers\u201d means someone else at the table won." }) : null,
+      others.length ? h("p", { class: "hint h2h-note", text: "Games played at the same table, and who won them. “Others” means someone else at the table won." }) : null,
       others.length ? t : h("p", { class: "hint", text: "No shared games yet." }));
     return h("tr", { class: "detail" }, h("td", { colspan: 8 }, h("div", { class: "dgrid" }, left, right)));
   }
@@ -667,25 +909,25 @@
     for (var i = 0; i < steps.length; i++) if (span / steps[i] <= 6) return steps[i];
     return 500;
   }
-
   function visiblePlayers() { return M.players.filter(function (p) { return !hidden[p.name] && p.first != null; }); }
 
   function renderLegend() {
+    $("#chartHint").textContent = basis === "table"
+      ? "Rating after each game. The darker line is 1,000: winning exactly as often as table sizes predict."
+      : "Rating after each game. The darker line is 1,000, the group average.";
     var box = $("#legend"); clear(box);
     M.players.slice().sort(function (a, b) { return a.rank - b.rank; }).forEach(function (p) {
-      var chip = h("button", { type: "button", class: "chip", style: "--c:" + colorVar(p), "aria-pressed": hidden[p.name] ? "false" : "true",
+      box.appendChild(h("button", { type: "button", class: "chip", style: "--c:" + colorVar(p), "aria-pressed": hidden[p.name] ? "false" : "true",
         onclick: function () { hidden[p.name] = !hidden[p.name]; hl = null; renderLegend(); drawChart(); renderTable(); },
         onmouseenter: function () { setHL(p.name); }, onmouseleave: function () { setHL(null); },
         onfocus: function () { setHL(p.name); }, onblur: function () { setHL(null); } },
-        h("span", { class: "key", "aria-hidden": "true" }), shortName(p));
-      box.appendChild(chip);
+        h("span", { class: "key", "aria-hidden": "true" }), shortName(p)));
     });
   }
 
   function setHL(name) {
     hl = name;
-    var svg = $("#chart");
-    Array.prototype.forEach.call(svg.querySelectorAll(".ln, .end"), function (el) {
+    Array.prototype.forEach.call($("#chart").querySelectorAll(".ln, .end"), function (el) {
       el.classList.toggle("dim", !!name && el.getAttribute("data-p") !== name);
     });
   }
@@ -699,7 +941,7 @@
     var vis = visiblePlayers();
     if (N < 2 || !vis.length) {
       var t = s("text", { x: W / 2, y: H / 2, "text-anchor": "middle" });
-      t.textContent = N < 2 ? "The chart appears after the second game." : "Turn a player on above to see their line.";
+      t.textContent = N < 2 ? "The chart appears once there are two games." : "Turn a player on above to see their line.";
       svg.appendChild(t); geo = null; return;
     }
     var m = { l: 46, r: 20, t: 16, b: 46 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
@@ -717,7 +959,6 @@
     }
     if (1000 > lo && 1000 < hi && (1000 - lo) % step !== 0) svg.appendChild(s("line", { class: "ref", x1: m.l, x2: W - m.r, y1: y(1000), y2: y(1000) }));
 
-    // day boundaries + date labels, game numbers along the bottom
     var starts = [];
     M.games.forEach(function (g, i) { if (i === 0 || g.date !== M.games[i - 1].date) starts.push(i); });
     starts.forEach(function (i, k) {
@@ -735,7 +976,6 @@
 
     var cross = s("line", { class: "cross", y1: m.t, y2: m.t + ih, visibility: "hidden" });
     svg.appendChild(cross);
-
     var order = vis.slice().sort(function (a, b) { return a.rank - b.rank; });
     order.forEach(function (p) {
       var d = "";
@@ -758,7 +998,7 @@
     });
     hit.addEventListener("pointerleave", hideTip);
     if (hl) setHL(hl);
-    if (kbIdx != null && document.activeElement === svg) showAt(kbIdx);
+    if (kbIdx != null && document.activeElement === svg) showAt(Math.min(kbIdx, N - 1));
   }
 
   function showAt(i) {
@@ -810,34 +1050,78 @@
     if (v === "chart") drawChart();
   }
 
-  // ---------- recent games ----------
-  function renderGames() {
-    var box = $("#games"); clear(box);
-    var all = M.games.slice().reverse(), shown = showAllGames ? all : all.slice(0, 8);
-    shown.forEach(function (g) {
-      var others = g.players.filter(function (n) { return g.winners.indexOf(n) < 0; });
-      box.appendChild(h("div", { class: "g" },
-        h("span", { class: "gid", text: g.id }),
-        h("span", { class: "gd", text: fmtDate(g.date) }),
-        h("span", { class: "gw" }, h("span", { class: "win", text: g.winners.length ? g.winners.join(", ") : "No winner logged" }), g.winners.length ? " won" : ""),
-        h("span", { class: "gp", text: g.players.length + "-player table · with " + others.map(function (n) { return shortName(M.byName[n]); }).join(", ") })));
+  // ---------- game log (by night / by game) ----------
+  function renderLog() {
+    $("#lNights").setAttribute("aria-pressed", logView === "nights");
+    $("#lGames").setAttribute("aria-pressed", logView === "games");
+    var box = $("#log"); clear(box);
+    var more = $("#moreLog"), total, limit, shown;
+    if (!M.games.length) { box.appendChild(h("p", { class: "empty", text: "No games in this period." })); more.hidden = true; return; }
+
+    if (logView === "nights") {
+      var ns = M.nights.slice().reverse();
+      total = ns.length; limit = 6;
+      (showAllLog ? ns : ns.slice(0, limit)).forEach(function (n) {
+        var order = Object.keys(n.wins).sort(function (a, b) { return n.wins[b] - n.wins[a] || a.localeCompare(b); });
+        var top = order.length ? n.wins[order[0]] : 0, wins = h("span", { class: "wins" });
+        order.forEach(function (nm) {
+          var mvp = n.wins[nm] === top && top >= 2;
+          wins.appendChild(h("span", { class: mvp ? "mvp" : "", text: shortName(M.byName[nm]) + " " + n.wins[nm] + (mvp ? " · MVP" : "") }));
+        });
+        box.appendChild(h("div", { class: "nt" },
+          h("span", { class: "nd", text: fmtDay(n.date) }),
+          h("span", { class: "ns", text: plural(n.games.length, "game") + " · " + plural(Object.keys(n.players).length, "player") }),
+          wins));
+      });
+      more.textContent = showAllLog ? "Show fewer" : "Show all " + total + " nights";
+    } else {
+      var all = M.games.slice().reverse();
+      total = all.length; limit = 8;
+      (showAllLog ? all : all.slice(0, limit)).forEach(function (g) {
+        var others = g.players.filter(function (n) { return g.winners.indexOf(n) < 0; });
+        box.appendChild(h("div", { class: "g" },
+          h("span", { class: "gid", text: g.id }),
+          h("span", { class: "gd", text: fmtDate(g.date) }),
+          h("span", { class: "gw" }, h("span", { class: "win", text: g.winners.length ? g.winners.map(function (n) { return M.byName[n] ? M.byName[n].name : n; }).join(", ") : "No winner logged" }), g.winners.length ? " won" : ""),
+          h("span", { class: "gp", text: g.players.length + "-player table · with " + others.map(function (n) { return shortName(M.byName[n]); }).join(", ") })));
+      });
+      more.textContent = showAllLog ? "Show fewer" : "Show all " + total + " games";
+    }
+    more.hidden = total <= limit;
+  }
+
+  // ---------- head-to-head grid ----------
+  function renderMatrix() {
+    var box = $("#matrix"); clear(box);
+    var ps = M.players.slice().sort(function (a, b) { return a.rank - b.rank; });
+    if (ps.length < 2) { box.appendChild(h("p", { class: "empty", text: "This appears once two players have shared a game." })); return; }
+    var head = h("tr", null, h("th", { scope: "col", "aria-label": "Player" }));
+    ps.forEach(function (q) { head.appendChild(h("th", { scope: "col", text: shortName(q) })); });
+    var tb = h("tbody");
+    ps.forEach(function (a) {
+      var tr = h("tr", null, h("th", { scope: "row", text: shortName(a) }));
+      ps.forEach(function (b) {
+        if (a === b) { tr.appendChild(h("td", { class: "self", "aria-hidden": "true" })); return; }
+        var t = a.together[b.name];
+        if (!t) { tr.appendChild(h("td", { class: "none", "aria-label": "Never at the same table", text: "–" })); return; }
+        var v = (t.mine - t.theirs) / t.g, alpha = Math.min(0.34, Math.abs(v) * 1.1);
+        var td = h("td", { title: a.name + " won " + t.mine + ", " + b.name + " won " + t.theirs + ", " + (t.g - t.mine - t.theirs) + " won by others, in " + t.g + " shared games", text: t.mine + "–" + t.theirs });
+        if (v !== 0) td.style.background = "color-mix(in srgb, " + (v > 0 ? "var(--jade)" : "var(--red)") + " " + Math.round(alpha * 100) + "%, transparent)";
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
     });
-    var more = $("#moreGames");
-    more.hidden = all.length <= 8;
-    more.textContent = showAllGames ? "Show fewer" : "Show all " + all.length + " games";
+    box.appendChild(h("table", { class: "mx" }, h("thead", null, head), tb));
   }
 
   // ---------- explainer ----------
   function renderHow() {
     var box = $("#how"); clear(box);
-    var b = M.base, grp = M.LG ? pct(b) : "n/a";
+    var tm = basis === "table", b = M.base, grp = M.LG ? pct(b) : "n/a";
 
-    // parts: strings are text, [text] is bold, DOM nodes are appended as-is
     function para(parts) {
       var el = h("p");
-      parts.forEach(function (x) {
-        el.appendChild(typeof x === "string" ? document.createTextNode(x) : Array.isArray(x) ? h("b", { text: x[0] }) : x);
-      });
+      parts.forEach(function (x) { el.appendChild(typeof x === "string" ? document.createTextNode(x) : Array.isArray(x) ? h("b", { text: x[0] }) : x); });
       box.appendChild(el);
     }
     function head(t) { box.appendChild(h("h3", { text: t })); }
@@ -851,54 +1135,53 @@
       box.appendChild(el);
     }
     function v(t, cls) { return h("span", { class: "v" + (cls ? " " + cls : ""), text: t }); }
-    function frac(top, bottom) { return h("span", { class: "frac" }, h("span", { text: top }), h("span", { text: bottom })); }
 
+    if (!tm) para([["You’re viewing the group-average rating. "], "This is how the spreadsheet’s Stats tab calculates it. The site’s default is the table-adjusted rating, explained under “Table-adjusted rating” below. Switch back with the Rating toggle at the top."]);
     para(["Every game has one winner, and that is all the sheet records: no scores, no placements. So the rating is built from a single question: ",
-      ["how often do you win, compared with the group?"],
+      ["how often do you win, compared with " + (tm ? "what your table sizes predict?" : "the group?")],
       " The formula below answers it while stopping a few lucky (or unlucky) games from deciding the leaderboard."]);
 
     head("The formula");
     var eq = h("div", { class: "eq", "aria-label": "Rating equals 1000 plus, open parenthesis, W plus 10 times p, divided by N plus 10, minus p, close parenthesis, times 2000" },
       h("span", { text: "Rating" }), h("span", { text: "=" }), h("span", { text: "1000" }), h("span", { text: "+" }),
       h("span", { text: "(" }),
-      h("span", { class: "frac" },
-        h("span", null, v("W"), " + 10 × ", v("p", "avg")),
-        h("span", null, v("N"), " + 10")),
+      h("span", { class: "frac" }, h("span", null, v("W"), " + 10 × ", v("p", "avg")), h("span", null, v("N"), " + 10")),
       h("span", { text: "−" }), v("p", "avg"),
       h("span", { text: ")" }), h("span", { text: "×" }), h("span", { text: "2000" }));
-    var defs = h("dl", { class: "defs" },
+    var pDef = tm
+      ? "The player’s own expected win rate: the average of 1 ÷ (players at the table) over the games they played, which is the Expected column. It replaces the group rate, so everyone is compared with their own fair share."
+      : "The group’s win rate: everyone’s wins divided by everyone’s games played" + (M.LG ? " (" + M.LW + " ÷ " + M.LG + " = " + grp + " right now)" : "") + ". It counts every game equally, so a new player on a hot streak can’t skew it.";
+    box.appendChild(h("div", { class: "formula" }, eq, h("dl", { class: "defs" },
       h("dt", null, v("W")), h("dd", { text: "Your wins." }),
       h("dt", null, v("N")), h("dd", { text: "Your games played." }),
-      h("dt", { class: "avg" }, h("span", { text: "p" })),
-      h("dd", { text: "The group’s win rate: everyone’s wins divided by everyone’s games played" + (M.LG ? " (" + M.LW + " ÷ " + M.LG + " = " + grp + " right now)" : "") + ". It counts every game equally, so a new player on a hot streak can’t skew it." }),
-      h("dt", { text: "10" }), h("dd", { text: "The number of imaginary games added to everyone’s record (explained below)." }));
-    box.appendChild(h("div", { class: "formula" }, eq, defs));
+      h("dt", { class: "avg" }, h("span", { text: "p" })), h("dd", { text: pDef }),
+      h("dt", { text: "10" }), h("dd", { text: "The number of imaginary games added to everyone’s record (explained below)." }))));
 
     head("Step by step");
     list("ol", [
       [["Start with your record: "], "W wins in N games."],
-      [["Add 10 imaginary games "], "in which you won at exactly the group rate. That adds 10 × p wins and 10 games, giving (W + 10p) ÷ (N + 10), your adjusted win rate."],
-      [["Compare with the group: "], "subtract p. Above zero means you win more often than the group average, below zero less often."],
+      [["Add 10 imaginary games "], "in which you won at exactly " + (tm ? "your expected win rate" : "the group rate") + ". That adds 10 × p wins and 10 games, giving (W + 10p) ÷ (N + 10), your adjusted win rate."],
+      [[tm ? "Compare with your fair share: " : "Compare with the group: "], "subtract p. Above zero means you win more often than " + (tm ? "your table sizes predict" : "the group average") + ", below zero less often."],
       [["Scale it: "], "multiply by 2000, so every percentage point of difference is worth 20 rating points."],
-      [["Centre it: "], "add 1000, so a player who wins exactly at the group rate sits at 1,000."]
+      [["Centre it: "], "add 1000, so a player who wins exactly at " + (tm ? "their expected rate" : "the group rate") + " sits at 1,000."]
     ]);
 
     if (M.LG) {
-      head("Worked examples with today’s numbers");
+      head("Worked examples with the numbers on screen");
       var played = M.players.filter(function (p) { return p.g; });
       var top = played.slice().sort(function (a, c) { return a.rank - c.rank; })[0];
       var few = played.filter(function (p) { return p !== top; }).sort(function (a, c) { return a.g - c.g || c.rank - a.rank; })[0];
       [top, few].forEach(function (p, i) {
         if (!p) return;
-        var adj = (p.w + PRIOR * b) / (p.g + PRIOR), delta = Math.round((adj - b) * 2000), raw = 1000 + (p.wr - b) * 2000;
+        var pb = p.base, adj = (p.w + PRIOR * pb) / (p.g + PRIOR), delta = Math.round((adj - pb) * 2000), raw = 1000 + (p.wr - pb) * 2000;
         var sign = delta >= 0 ? "+" : "−", mag = Math.abs(delta);
         function row(lbl, val, cls) { return h("div", { class: "row" + (cls ? " " + cls : "") }, h("span", { class: "lbl", text: lbl }), h("span", { class: "val", text: val })); }
         box.appendChild(h("div", { class: "ex" },
           h("h4", { text: p.name + (i === 0 ? " (top of the board)" : " (fewest games, shows the small-sample effect)") }),
-          row("1. Record", p.w + (p.w === 1 ? " win" : " wins") + " in " + p.g + (p.g === 1 ? " game" : " games") + " (" + pct(p.wr) + ")"),
-          row("2. Add " + PRIOR + " imaginary games", "(" + p.w + " + " + PRIOR + " × " + b.toFixed(3) + ") ÷ (" + p.g + " + " + PRIOR + ") = " + pct(adj)),
-          row("3. Compare with the group (" + grp + ")", pct(adj) + " − " + pct(b) + " = " + signed(adj - b) + " points"),
-          row("4. Scale and centre", "× 2000 = " + sign + mag + ", so 1,000 " + (delta >= 0 ? "+" : "−") + " " + mag + " = " + rnd(p.rating), "result"),
+          row("1. Record", plural(p.w, "win") + " in " + plural(p.g, "game") + " (" + pct(p.wr) + ")"),
+          row("2. Add " + PRIOR + " imaginary games", "(" + p.w + " + " + PRIOR + " × " + pb.toFixed(3) + ") ÷ (" + p.g + " + " + PRIOR + ") = " + pct(adj)),
+          row("3. Compare with " + (tm ? "their fair share" : "the group") + " (" + pct(pb) + ")", pct(adj) + " − " + pct(pb) + " = " + signed(adj - pb) + " points"),
+          row("4. Scale and centre", "× 2000 = " + sign + mag + ", so 1,000 " + sign + " " + mag + " = " + rnd(p.rating), "result"),
           row("Without the adjustment", "The raw win rate alone would give " + rnd(raw) + ".", "aside")));
       });
     }
@@ -910,53 +1193,97 @@
     var w = h("div", { class: "weights" });
     [5, 10, 20, 30, 60].forEach(function (n) { w.appendChild(h("span", null, n + " games: ", h("b", { text: Math.round(n / (n + PRIOR) * 100) + "%" }))); });
     box.appendChild(w);
-    para(["At 10 games, your record and the group average count equally. By 60 games your record is 86% of the rating, so the adjustment fades out on its own."]);
+    para(["At 10 games, your record and the starting assumption count equally. By 60 games your record is 86% of the rating, so the adjustment fades out on its own."]);
 
     head("Why not an Elo-style rating?");
     para(["Elo and similar systems update after each game based on who beat whom, and they need a result between specific opponents. Here a game is one winner among three to six players, with no scores or finishing order, so there is no head-to-head result to learn from. The only reliable signal is “won” or “didn’t win,” which is exactly what a win rate measures. This model also has an advantage: anyone can check their own rating with a calculator, and there is no hidden history to argue about."]);
 
     head("Why 1,000, 2,000 and 10?");
-    para(["1,000 as the centre and 2,000 as the multiplier just make the number look like a familiar rating: 1,000 is average, and 20 points equals one percentage point of win rate. The 10 imaginary games is a judgment call. It is large enough that one lucky night can’t put anyone at the top, and small enough that ratings mostly reflect real results after a few weeks of regular play. It can be changed if the group wants ratings to move faster or slower."]);
+    para(["1,000 as the centre and 2,000 as the multiplier just make the number look like a familiar rating: 1,000 is par (you win exactly as often as expected), and 20 points equals one percentage point of win rate. The 10 imaginary games is a judgment call. It is large enough that one lucky night can’t put anyone at the top, and small enough that ratings mostly reflect real results after a few weeks of regular play. It can be changed if the group wants ratings to move faster or slower."]);
+
+    head("Table-adjusted rating (the default)");
+    para(["Ratings compare each player with their own ", ["expected win rate"], ", which is what their table sizes predict, rather than with the group’s overall win rate. The reason is that 3-player games are easier to win than 4-player games: someone who happens to sit at more small tables would get a friendlier comparison if everyone were held to the same group rate. Here, 1,000 means you win exactly as often as your own tables predict, and each percentage point above or below that is worth 20 points."]);
+    para(["The ", ["Group average"], " option at the top swaps p back to the group’s overall win rate. That is how the spreadsheet’s Stats tab calculates Rating, so use it if you want the numbers to match the sheet. Everything else in the formula is identical."]);
 
     head("Expected win % and Luck");
-    para([["Expected"], " is the win rate a player would have from table size alone. In a game with T players everyone has a 1-in-T chance: 25% at a 4-player table, 33% at a 3-player table, 20% at 5. A player’s expected win % is the average of 1 ÷ T across the games they played. Someone who often plays 3-player games has a higher expected win % than someone who always plays 4-player tables."]);
-    para([["Luck"], " = win % − expected win %, in percentage points. Positive means winning more than the table sizes predict, negative means less. It isn’t a pure skill measure, since a hot streak shows up here too, but it removes the table-size effect that the rating itself doesn’t."]);
+    para([["Expected"], " is the win rate a player would have from table size alone. In a game with T players everyone has a 1-in-T chance: 25% at a 4-player table, 33% at a 3-player table, 20% at 5. A player’s expected win % is the average of 1 ÷ T across the games they played."]);
+    para([["Luck"], " = win % − expected win %, in percentage points. Positive means winning more than the table sizes predict, negative means less. It isn’t a pure skill measure, since a hot streak shows up here too, but it removes the table-size effect."]);
+
+    head("Periods, nights and the arrows");
+    para(["The Period menu recalculates everything using only the games in that period, so a monthly rating starts fresh on the first of the month, with everyone back at the starting assumption. The ", ["arrows"], " next to each rating compare it with the rating after the previous game night. Someone who didn’t play the latest night can still move slightly, because the group’s win rate shifts a little with every game. ", ["Nemesis"], " and ", ["Lucky charm"], " in a player’s details need at least three shared games."]);
 
     head("What the rating can’t tell you");
     list("ul", [
       ["It doesn’t know who you played. Beating a strong table counts the same as beating a weak one."],
-      ["It doesn’t adjust for table size, so 3-player tables (easier to win) help a little. Check the Luck column for that."],
-      ["Every game counts equally, whenever it was played. Ratings will move slowly as the log gets long."],
+      ["In the Group average view it doesn’t adjust for table size, so 3-player tables (easier to win) help a little. The default Table-adjusted view, and the Luck column, account for that."],
+      ["Every game counts equally, whenever it was played, unless you narrow the Period."],
       ["A hot streak looks like skill until enough games dilute it."]
     ]);
     para([["Provisional"], " marks players with fewer than " + PROVISIONAL + " games, where the imaginary games still outweigh the real record. Ranking always follows the rating."]);
   }
 
   // ---------- render ----------
-  // Games are ordered by their Game ID number (G1, G2, ...), not by row position, so a game
-  // that gets rewritten lower down the Log after an edit keeps its place in the history.
-  function sortGames(games) {
-    var items = games.map(function (g, i) { var m = /(\d+)/.exec(g.id); return { g: g, i: i, n: m ? +m[1] : null }; });
-    if (items.some(function (x) { return x.n == null; })) return games;
-    items.sort(function (a, b) { return a.n - b.n || a.i - b.i; });
-    return items.map(function (x) { return x.g; });
-  }
+  function recompute() { M = compute(periodGames(), basis, ORDER); }
 
-  function setData(data, src) {
-    source = src;
-    var prevOpen = openName;
-    M = compute({ games: sortGames(data.games) });
-    if (prevOpen && !M.byName[prevOpen]) openName = null;
-    renderHeader(); renderFacts(); renderBoard(); renderLegend(); renderGames(); renderHow();
+  function renderAll() {
+    renderHeader(); renderToolbar(); renderFacts(); renderBoard(); renderLegend(); renderLog(); renderMatrix(); renderHow();
     renderTable();
     if (view === "chart") drawChart();
-    var foot = $("#foot");
-    foot.textContent = "Ratings are recomputed from the full game log every time the page loads.";
+    $("#foot").textContent = "Ratings are recomputed from the full game log every time the page loads.";
+    if (pendingScroll && openName) {
+      var row = document.querySelector('tr.row[data-player="' + openName.replace(/"/g, '\\"') + '"]');
+      if (row) row.scrollIntoView({ block: "center" });
+      pendingScroll = false;
+    }
   }
 
+  function setData(data) {
+    ALL = sortGames(data.games);
+    ORDER = [];
+    ALL.forEach(function (g) { g.players.forEach(function (n) { if (ORDER.indexOf(n) < 0) ORDER.push(n); }); });
+    buildPeriods();
+    recompute();
+    if (openName && !M.byName[openName]) openName = null;
+    writeHash();
+    renderAll();
+  }
+
+  // ---------- loading: cache, live sheet ----------
+  function readCache() {
+    try { var o = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); if (o && o.games && o.games.length) return o; } catch (e) {}
+    return null;
+  }
+  function saveCache(d) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), games: d.games })); } catch (e) {} }
+
+  function load() {
+    if (!CFG.sheetCsvUrl || busy) return;
+    busy = true; failed = false; renderStatus();
+    fetch(CFG.sheetCsvUrl, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (text) {
+        var d = parseLog(text);
+        if (!d.games.length) throw new Error("No games in the sheet");
+        src = "live"; stamp = new Date(); busy = false; failed = false; lastLoadMs = Date.now();
+        saveCache(d); setData(d);
+      })
+      .catch(function (err) {
+        busy = false; failed = true;
+        if (window.console) console.warn("Live sheet unavailable:", err);
+        renderStatus();
+      });
+  }
+
+  // ---------- events ----------
+  $("#period").addEventListener("change", function (e) { period = e.target.value; openName = null; showAllLog = false; recompute(); writeHash(); renderAll(); });
+  function setBasis(b) { if (basis === b) return; basis = b; recompute(); writeHash(); renderAll(); }
+  $("#bGroup").addEventListener("click", function () { setBasis("group"); });
+  $("#bTable").addEventListener("click", function () { setBasis("table"); });
+  $("#lNights").addEventListener("click", function () { logView = "nights"; showAllLog = false; renderLog(); });
+  $("#lGames").addEventListener("click", function () { logView = "games"; showAllLog = false; renderLog(); });
+  $("#moreLog").addEventListener("click", function () { showAllLog = !showAllLog; renderLog(); });
   $("#vChart").addEventListener("click", function () { setView("chart"); });
   $("#vTable").addEventListener("click", function () { setView("table"); });
-  $("#moreGames").addEventListener("click", function () { showAllGames = !showAllGames; renderGames(); });
+
   var svgEl = $("#chart");
   svgEl.addEventListener("keydown", function (e) {
     if (!geo) return;
@@ -968,25 +1295,22 @@
   });
   svgEl.addEventListener("blur", function () { kbIdx = null; hideTip(); });
   var rz; window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(function () { if (M && view === "chart") drawChart(); }, 80); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && CFG.sheetCsvUrl && !busy && Date.now() - lastLoadMs > REFRESH_AFTER_MS) load();
+  });
 
   // ---------- boot ----------
-  var snap = window.MAHJONG_SNAPSHOT || { games: [] };
-  setData(snap, "snapshot");
+  var hs = readHash();
+  if (hs.period) period = hs.period;
+  if (hs.rating === "group") basis = "group";
+  if (hs.player) { openName = hs.player; pendingScroll = true; }
 
-  var url = (window.MAHJONG_CONFIG || {}).sheetCsvUrl;
-  if (url) {
-    fetch(url, { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-      .then(function (text) {
-        var d = parseLog(text);
-        if (!d.games.length) throw new Error("No games in the sheet");
-        var t = new Date();
-        loadedAt = t.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-        setData(d, "live");
-      })
-      .catch(function (err) { liveFailed = true; if (window.console) console.warn("Live sheet unavailable:", err); renderHeader(); });
-  }
+  var cached = CFG.sheetCsvUrl ? readCache() : null;
+  if (cached) { src = "cached"; stamp = new Date(cached.t); setData({ games: cached.games }); }
+  else { src = "snapshot"; setData(window.MAHJONG_SNAPSHOT || { games: [] }); }
+  load();
 })();
+
 </script>
 </body>
 </html>
