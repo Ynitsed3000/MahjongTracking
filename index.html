@@ -198,7 +198,7 @@
   }
   @media (max-width: 460px) { .c-luck { display: none; } }
 
-  tr.detail td { padding: 0 !important; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 55%, transparent); text-align: left !important; white-space: normal !important; }
+  tr.detail > td { padding: 0 !important; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 55%, transparent); text-align: left !important; white-space: normal !important; }
   .dgrid { display: grid; gap: 22px; padding: 6px 16px 22px; }
   @media (min-width: 720px) { .dgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); padding: 8px 24px 26px; gap: 32px; } }
   .dgrid h3 { margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
@@ -216,6 +216,8 @@
   .h2h tbody td { border-bottom: 1px solid var(--line); }
   .h2h tbody tr:last-child td { border-bottom: 0; }
   .h2h .lead { font-weight: 700; color: var(--jade); }
+  .h2h-note { margin: -4px 0 10px; }
+  .h2h th:not(:first-child), .h2h td:not(:first-child) { padding-left: 12px; }
 
   /* ---------- chart ---------- */
   .chart-body { padding: 8px 12px 18px; }
@@ -643,14 +645,17 @@
 
     var others = Object.keys(p.together).sort(function (a, b) { return p.together[b].g - p.together[a].g || a.localeCompare(b); });
     var t = h("table", { class: "h2h" },
-      h("thead", null, h("tr", null, h("th", { scope: "col", text: "With" }), h("th", { scope: "col", text: "Games" }), h("th", { scope: "col", text: "You won" }), h("th", { scope: "col", text: "They won" }))),
+      h("thead", null, h("tr", null, h("th", { scope: "col", text: "With" }), h("th", { scope: "col", text: "Games" }), h("th", { scope: "col", text: shortName(p) + " won" }), h("th", { scope: "col", text: "They won" }), h("th", { scope: "col", text: "Others" }))),
       h("tbody"));
     others.forEach(function (n) {
       var x = p.together[n], q = M.byName[n];
       t.lastChild.appendChild(h("tr", null, h("td", { text: shortName(q) }), h("td", { text: x.g }),
-        h("td", { class: x.mine > x.theirs ? "lead" : "", text: x.mine }), h("td", { class: x.theirs > x.mine ? "lead" : "", text: x.theirs })));
+        h("td", { class: x.mine > x.theirs ? "lead" : "", text: x.mine }), h("td", { class: x.theirs > x.mine ? "lead" : "", text: x.theirs }),
+        h("td", { class: "muted", text: x.g - x.mine - x.theirs })));
     });
-    var right = h("div", null, h("h3", { text: "Head to head, games at the same table" }), others.length ? t : h("p", { class: "hint", text: "No shared games yet." }));
+    var right = h("div", null, h("h3", { text: "Head to head, games at the same table" }),
+      others.length ? h("p", { class: "hint h2h-note", text: "Games played at the same table, and who won them. \u201cOthers\u201d means someone else at the table won." }) : null,
+      others.length ? t : h("p", { class: "hint", text: "No shared games yet." }));
     return h("tr", { class: "detail" }, h("td", { colspan: 8 }, h("div", { class: "dgrid" }, left, right)));
   }
 
