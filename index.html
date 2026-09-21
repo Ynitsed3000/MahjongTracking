@@ -276,6 +276,31 @@
   details.how .txt { max-width: 68ch; margin-top: 14px; color: var(--ink-2); display: grid; gap: 12px; }
   details.how .txt p { margin: 0; }
   details.how .txt b { color: var(--ink); }
+  details.how .txt { max-width: 74ch; gap: 14px; line-height: 1.6; }
+  details.how .txt h3 { margin: 14px 0 -4px; font: 700 18px/1.3 var(--display); letter-spacing: -.005em; color: var(--ink); }
+  details.how .txt ul, details.how .txt ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+  .formula { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; overflow-x: auto; }
+  .eq { display: flex; align-items: center; gap: 10px; font: 600 clamp(17px, 3.8vw, 22px)/1.2 var(--display); color: var(--ink); white-space: nowrap; }
+  .eq .v { font-style: italic; }
+  .eq .v.avg { text-decoration: overline; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; }
+  .frac > span:first-child { padding: 0 8px 4px; border-bottom: 1.5px solid var(--ink); }
+  .frac > span:last-child { padding: 4px 8px 0; }
+  .defs { margin: 16px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14.5px; line-height: 1.5; }
+  .defs dt { font: italic 600 16px/1.4 var(--display); color: var(--ink); text-align: center; min-width: 1.6ch; }
+  .defs dt.avg span { text-decoration: overline; }
+  .defs dd { margin: 0; }
+  .ex { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .ex h4 { margin: 0; padding: 11px 16px; font: 600 15px/1.3 var(--body); color: var(--ink); background: var(--surface-2); }
+  .ex .row { display: grid; gap: 1px; padding: 10px 16px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .ex .row:nth-child(2) { border-top: 0; }
+  .ex .lbl { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); }
+  .ex .val { color: var(--ink); }
+  .ex .row.result .val { color: var(--jade); font-weight: 700; }
+  .ex .row.aside .val { color: var(--ink-2); }
+  .weights { display: flex; flex-wrap: wrap; gap: 8px; }
+  .weights span { border: 1px solid var(--line-strong); border-radius: 999px; padding: 2px 11px; font-size: 13.5px; color: var(--ink-2); }
+  .weights b { font-variant-numeric: tabular-nums; }
   .foot { color: var(--ink-3); font-size: 13px; }
   .note { margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--red-soft); color: var(--ink); font-size: 14px; }
 
@@ -800,12 +825,106 @@
   // ---------- explainer ----------
   function renderHow() {
     var box = $("#how"); clear(box);
-    var lg = M.LG ? pct(M.LW / M.LG) : "–";
-    function p(parts) { var el = h("p"); parts.forEach(function (x) { el.appendChild(typeof x === "string" ? document.createTextNode(x) : h("b", { text: x[0] })); }); box.appendChild(el); }
-    p([["Rating"], " starts from a player’s real win rate, then blends in " + PRIOR + " imaginary games played at the group average (" + lg + " right now). Early results get pulled toward 1,000 instead of swinging wildly, so going 2 for 2 doesn’t make anyone a legend. As someone plays more than " + PRIOR + " games, their rating settles on their true win rate. 1,000 means an average win rate, and every percentage point above or below it moves the rating 20 points."]);
-    p([["Expected"], " is the win rate a player would have from table size alone. Each game gives everyone a 1-in-N chance, where N is how many people played, and this is the average across the games they sat in. Someone who often plays 3-player games has a higher expected rate than someone always at 4-player tables."]);
-    p([["Luck"], " is win rate minus expected, in percentage points. Positive means winning more than the table size predicts. It doesn’t isolate skill, since a hot streak shows up here too, but it removes the table-size effect."]);
-    p([["Provisional"], " marks players with fewer than " + PROVISIONAL + " games. Rank order still follows the rating."]);
+    var b = M.base, grp = M.LG ? pct(b) : "n/a";
+
+    // parts: strings are text, [text] is bold, DOM nodes are appended as-is
+    function para(parts) {
+      var el = h("p");
+      parts.forEach(function (x) {
+        el.appendChild(typeof x === "string" ? document.createTextNode(x) : Array.isArray(x) ? h("b", { text: x[0] }) : x);
+      });
+      box.appendChild(el);
+    }
+    function head(t) { box.appendChild(h("h3", { text: t })); }
+    function list(tag, items) {
+      var el = h(tag);
+      items.forEach(function (parts) {
+        var li = h("li");
+        parts.forEach(function (x) { li.appendChild(typeof x === "string" ? document.createTextNode(x) : Array.isArray(x) ? h("b", { text: x[0] }) : x); });
+        el.appendChild(li);
+      });
+      box.appendChild(el);
+    }
+    function v(t, cls) { return h("span", { class: "v" + (cls ? " " + cls : ""), text: t }); }
+    function frac(top, bottom) { return h("span", { class: "frac" }, h("span", { text: top }), h("span", { text: bottom })); }
+
+    para(["Every game has one winner, and that is all the sheet records: no scores, no placements. So the rating is built from a single question: ",
+      ["how often do you win, compared with the group?"],
+      " The formula below answers it while stopping a few lucky (or unlucky) games from deciding the leaderboard."]);
+
+    head("The formula");
+    var eq = h("div", { class: "eq", "aria-label": "Rating equals 1000 plus, open parenthesis, W plus 10 times p, divided by N plus 10, minus p, close parenthesis, times 2000" },
+      h("span", { text: "Rating" }), h("span", { text: "=" }), h("span", { text: "1000" }), h("span", { text: "+" }),
+      h("span", { text: "(" }),
+      h("span", { class: "frac" },
+        h("span", null, v("W"), " + 10 × ", v("p", "avg")),
+        h("span", null, v("N"), " + 10")),
+      h("span", { text: "−" }), v("p", "avg"),
+      h("span", { text: ")" }), h("span", { text: "×" }), h("span", { text: "2000" }));
+    var defs = h("dl", { class: "defs" },
+      h("dt", null, v("W")), h("dd", { text: "Your wins." }),
+      h("dt", null, v("N")), h("dd", { text: "Your games played." }),
+      h("dt", { class: "avg" }, h("span", { text: "p" })),
+      h("dd", { text: "The group’s win rate: everyone’s wins divided by everyone’s games played" + (M.LG ? " (" + M.LW + " ÷ " + M.LG + " = " + grp + " right now)" : "") + ". It counts every game equally, so a new player on a hot streak can’t skew it." }),
+      h("dt", { text: "10" }), h("dd", { text: "The number of imaginary games added to everyone’s record (explained below)." }));
+    box.appendChild(h("div", { class: "formula" }, eq, defs));
+
+    head("Step by step");
+    list("ol", [
+      [["Start with your record: "], "W wins in N games."],
+      [["Add 10 imaginary games "], "in which you won at exactly the group rate. That adds 10 × p wins and 10 games, giving (W + 10p) ÷ (N + 10), your adjusted win rate."],
+      [["Compare with the group: "], "subtract p. Above zero means you win more often than the group average, below zero less often."],
+      [["Scale it: "], "multiply by 2000, so every percentage point of difference is worth 20 rating points."],
+      [["Centre it: "], "add 1000, so a player who wins exactly at the group rate sits at 1,000."]
+    ]);
+
+    if (M.LG) {
+      head("Worked examples with today’s numbers");
+      var played = M.players.filter(function (p) { return p.g; });
+      var top = played.slice().sort(function (a, c) { return a.rank - c.rank; })[0];
+      var few = played.filter(function (p) { return p !== top; }).sort(function (a, c) { return a.g - c.g || c.rank - a.rank; })[0];
+      [top, few].forEach(function (p, i) {
+        if (!p) return;
+        var adj = (p.w + PRIOR * b) / (p.g + PRIOR), delta = Math.round((adj - b) * 2000), raw = 1000 + (p.wr - b) * 2000;
+        var sign = delta >= 0 ? "+" : "−", mag = Math.abs(delta);
+        function row(lbl, val, cls) { return h("div", { class: "row" + (cls ? " " + cls : "") }, h("span", { class: "lbl", text: lbl }), h("span", { class: "val", text: val })); }
+        box.appendChild(h("div", { class: "ex" },
+          h("h4", { text: p.name + (i === 0 ? " (top of the board)" : " (fewest games, shows the small-sample effect)") }),
+          row("1. Record", p.w + (p.w === 1 ? " win" : " wins") + " in " + p.g + (p.g === 1 ? " game" : " games") + " (" + pct(p.wr) + ")"),
+          row("2. Add " + PRIOR + " imaginary games", "(" + p.w + " + " + PRIOR + " × " + b.toFixed(3) + ") ÷ (" + p.g + " + " + PRIOR + ") = " + pct(adj)),
+          row("3. Compare with the group (" + grp + ")", pct(adj) + " − " + pct(b) + " = " + signed(adj - b) + " points"),
+          row("4. Scale and centre", "× 2000 = " + sign + mag + ", so 1,000 " + (delta >= 0 ? "+" : "−") + " " + mag + " = " + rnd(p.rating), "result"),
+          row("Without the adjustment", "The raw win rate alone would give " + rnd(raw) + ".", "aside")));
+      });
+    }
+
+    head("Why not just rank by win rate?");
+    para(["Because small samples lie. Someone who wins their first two games has a 100% win rate, and someone who has won 4 of 30 has 13%, but the first player has told us almost nothing. The 10 imaginary games act as a starting assumption that a new player is about average. Real results then pull the rating away from that assumption, slowly at first and then faster as evidence builds up. Statisticians call this a ",
+      ["Bayesian average"], " (or shrinkage), and it is how sites rank movies that have only a few votes."]);
+    para(["The weight your real record carries is N ÷ (N + 10), so it grows with every game:"]);
+    var w = h("div", { class: "weights" });
+    [5, 10, 20, 30, 60].forEach(function (n) { w.appendChild(h("span", null, n + " games: ", h("b", { text: Math.round(n / (n + PRIOR) * 100) + "%" }))); });
+    box.appendChild(w);
+    para(["At 10 games, your record and the group average count equally. By 60 games your record is 86% of the rating, so the adjustment fades out on its own."]);
+
+    head("Why not an Elo-style rating?");
+    para(["Elo and similar systems update after each game based on who beat whom, and they need a result between specific opponents. Here a game is one winner among three to six players, with no scores or finishing order, so there is no head-to-head result to learn from. The only reliable signal is “won” or “didn’t win,” which is exactly what a win rate measures. This model also has an advantage: anyone can check their own rating with a calculator, and there is no hidden history to argue about."]);
+
+    head("Why 1,000, 2,000 and 10?");
+    para(["1,000 as the centre and 2,000 as the multiplier just make the number look like a familiar rating: 1,000 is average, and 20 points equals one percentage point of win rate. The 10 imaginary games is a judgment call. It is large enough that one lucky night can’t put anyone at the top, and small enough that ratings mostly reflect real results after a few weeks of regular play. It can be changed if the group wants ratings to move faster or slower."]);
+
+    head("Expected win % and Luck");
+    para([["Expected"], " is the win rate a player would have from table size alone. In a game with T players everyone has a 1-in-T chance: 25% at a 4-player table, 33% at a 3-player table, 20% at 5. A player’s expected win % is the average of 1 ÷ T across the games they played. Someone who often plays 3-player games has a higher expected win % than someone who always plays 4-player tables."]);
+    para([["Luck"], " = win % − expected win %, in percentage points. Positive means winning more than the table sizes predict, negative means less. It isn’t a pure skill measure, since a hot streak shows up here too, but it removes the table-size effect that the rating itself doesn’t."]);
+
+    head("What the rating can’t tell you");
+    list("ul", [
+      ["It doesn’t know who you played. Beating a strong table counts the same as beating a weak one."],
+      ["It doesn’t adjust for table size, so 3-player tables (easier to win) help a little. Check the Luck column for that."],
+      ["Every game counts equally, whenever it was played. Ratings will move slowly as the log gets long."],
+      ["A hot streak looks like skill until enough games dilute it."]
+    ]);
+    para([["Provisional"], " marks players with fewer than " + PROVISIONAL + " games, where the imaginary games still outweigh the real record. Ranking always follows the rating."]);
   }
 
   // ---------- render ----------
