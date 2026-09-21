@@ -29,6 +29,11 @@ someone opens the page it downloads the Log tab, rebuilds every game, and recomp
 and ratings in the browser using the same formulas as the sheet's Stats tab. If the sheet can't
 be reached it shows a saved copy of the data and says so in the header.
 
+The site only reads columns A to D of the Log tab (Date, Game ID, Player, Result). The Player Count,
+Winners in Game and hidden banding columns are ignored, since it recalculates those itself. Games are
+ordered by Game ID number (G1, G2, ...), not by row position, so a game that gets rewritten lower down
+the Log after an edit keeps its place in the history.
+
 | File | What it is |
 | --- | --- |
 | `index.html` | The whole site: layout, styles, and the code that reads the sheet and does the math. |
@@ -36,10 +41,29 @@ be reached it shows a saved copy of the data and says so in the header.
 | `snapshot.js` | A saved copy of the game log, shown only if the live sheet can't be reached. |
 | `make_snapshot.py` | Optional helper that regenerates `snapshot.js` from an xlsx download. |
 
+## How games get into the sheet
+
+1. The Google Form asks two questions: **Who played?** (checkboxes, with "Other" for a new name)
+   and **Who won?** (dropdown, kept in sync with the Players sheet).
+2. Each submission lands in the **Form Responses 1** tab. Column D is used by the script for
+   validation warnings and column E stores the Game ID that response produced.
+3. A script in the spreadsheet's Apps Script project turns each response into Log rows, one per
+   player. It adds any new player to the Players sheet, checks that the winner was actually at the
+   table, and assigns the next Game ID.
+4. **Editing a response** re-runs the same script. It reuses the stored Game ID, deletes that game's
+   old Log rows and writes them again, so corrections flow through to the Log and the website.
+
+Two installable triggers drive this: `onFormSubmit` for new submissions and `onFormEdit` for edits.
+Both must be created on the **spreadsheet's** Apps Script project, not the form's. Binding them to the
+form instead breaks the edit trigger.
+
 ## Day to day
 
 **Log a game:** use the Google Form as usual. The game shows up on the site after Google refreshes
 the published CSV, usually within a few minutes.
+
+**Fix a mistake:** edit the response in the Form Responses 1 tab (or through the form's edit link). The
+Log tab updates automatically and the site follows once Google refreshes the published CSV.
 
 **Add a player:** nothing to do. A new name appears on the site the first time it's in a game.
 
@@ -98,12 +122,14 @@ The site's "How ratings work" section explains all of this in more detail, with 
 | "Saved copy of the game log" | `config.js` has no link, so the site never tries the sheet. |
 | A new game isn't showing | Google can take a few minutes to refresh the published CSV. Wait, then hard-refresh. |
 | Red note: "G12 has 2 winners" | That game in the Log tab doesn't have exactly one Win row. Fix it in the sheet. |
+| Edited a response but the site looks the same | Give Google a few minutes to refresh the published CSV, then hard-refresh. If the Log tab itself didn't change, the edit trigger isn't running: check that `onFormEdit` exists on the spreadsheet's Apps Script project, and that column D of that row has no warning. |
 | Old version of the page | Hard-refresh (Cmd+Shift+R). Browsers cache the page for a few minutes after a deploy. |
 
 ## Known limitations
 
-- **Edited form responses don't update the Log tab.** The site shows whatever the Log says, so an
-  edited response can leave the leaderboard out of sync with the form. Fix the row in the Log tab directly.
+- **The site trusts the Log tab.** If a game in the Log has no winner or more than one, the site shows
+  a red note naming it, but it can't tell that a winner was entered wrongly. Corrections are made by
+  editing the form response (or the Log rows directly).
 - **The rating doesn't know who you played** (a win at a strong table counts the same as a win at a
   weak one) and **doesn't adjust for table size**. The Luck column shows the table-size effect.
 - Updates are not instant: they follow Google's refresh of the published CSV.

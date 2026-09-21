@@ -933,10 +933,19 @@
   }
 
   // ---------- render ----------
+  // Games are ordered by their Game ID number (G1, G2, ...), not by row position, so a game
+  // that gets rewritten lower down the Log after an edit keeps its place in the history.
+  function sortGames(games) {
+    var items = games.map(function (g, i) { var m = /(\d+)/.exec(g.id); return { g: g, i: i, n: m ? +m[1] : null }; });
+    if (items.some(function (x) { return x.n == null; })) return games;
+    items.sort(function (a, b) { return a.n - b.n || a.i - b.i; });
+    return items.map(function (x) { return x.g; });
+  }
+
   function setData(data, src) {
     source = src;
     var prevOpen = openName;
-    M = compute(data);
+    M = compute({ games: sortGames(data.games) });
     if (prevOpen && !M.byName[prevOpen]) openName = null;
     renderHeader(); renderFacts(); renderBoard(); renderLegend(); renderGames(); renderHow();
     renderTable();
