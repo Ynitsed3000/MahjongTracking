@@ -9,8 +9,10 @@ rating, and how every game night went, and it updates on its own whenever a game
 
 - **Header:** a **Log a game** button that opens the Google Form, plus a status line showing whether
   the data is live from the sheet.
-- **Filters:** a **Period** menu (All time, Last 30 days, or any month) and a **Rating** toggle
-  (Table-adjusted, the default, or Group average). Everything below recalculates for the choice.
+- **Filters:** a **Period** menu (All time, Last 30 days, or any month), a **Rating** toggle
+  (Table-adjusted, the default, or Group average), and a **Players** toggle (All, or Active only,
+  which hides anyone who hasn't played in the 30 days before the latest game). Everything below
+  follows the choices, and the Players choice is remembered on each device.
 - **Awards:** longest win streak, longest cold streak, best night, most games, beating the odds,
   and biggest climb.
 - **Standings:** every player ranked by rating, with games, wins, win %, expected win % and luck.
@@ -134,6 +136,10 @@ address. If the site ever moves to a different address, update those two lines.
 - **Arrows** compare a rating with the rating after the previous game night.
 - **Period** recalculates everything from only the games in that period, so a month's ratings start
   fresh on the first of the month.
+- **Active only** hides players who haven't played in the 30 days up to the most recent game. It only
+  changes who is listed: ratings and arrows still use every game, and the game log keeps its full
+  history. The 30 days is measured back from the latest game, not from today, so a long break doesn't
+  empty the leaderboard.
 
 The site's "How ratings work" section explains all of this in more detail, with worked examples.
 
@@ -150,6 +156,7 @@ The site's "How ratings work" section explains all of this in more detail, with 
 | Edited a response but the site looks the same | Give Google a few minutes to refresh the published CSV, then press Refresh. If the Log tab itself didn't change, the edit trigger isn't running: check that `onFormEdit` exists on the spreadsheet's Apps Script project, and that column D of that row has no warning. |
 | Old version of the page | Hard-refresh (Cmd+Shift+R). Browsers cache the page for a few minutes after a deploy. |
 | Link preview shows the old image or none | Chat apps cache previews. Paste the link with `?v=2` on the end to force a fresh one. |
+| A player is missing from the standings | The Players toggle is probably on **Active only** and they haven't played in the last 30 days. Switch it to All. |
 | "No games in this period" | The Period menu is set to a period with no games. Choose All time. |
 
 ## Known limitations

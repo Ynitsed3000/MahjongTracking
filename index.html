@@ -417,6 +417,13 @@
         <button type="button" id="bGroup" aria-pressed="false">Group average</button>
       </div>
     </div>
+    <div class="fld">
+      <span id="actLbl">Players</span>
+      <div class="seg" role="group" aria-labelledby="actLbl">
+        <button type="button" id="aAll" aria-pressed="true">All</button>
+        <button type="button" id="aActive" aria-pressed="false" title="Hides players who haven't played in the 30 days before the latest game">Active only</button>
+      </div>
+    </div>
     <p class="scope" id="scope" hidden></p>
   </div>
 
@@ -496,6 +503,8 @@
   var MAX_SERIES = 8;
   var CACHE_KEY = "mahjong-leaderboard-cache-v1";
   var REFRESH_AFTER_MS = 5 * 60 * 1000;
+  var ACTIVE_DAYS = 30;      // "active" = played within this many days of the latest game
+  var ACTIVE_KEY = "mahjong-active-only";
 
   // ---------- tiny DOM helpers (text always goes through textContent) ----------
   function h(tag, attrs) {
@@ -680,8 +689,8 @@
   function names(list) { return list.map(shortName).join(", "); }
 
   // ---------- state ----------
-  var ALL = [], ORDER = [], M = null;
-  var period = "all", basis = "table";
+  var ALL = [], ORDER = [], M = null, LAST = {}, ANCHOR = "", CUTOFF = "";
+  var period = "all", basis = "table", activeOnly = false;
   var sortKey = "rating", sortDir = -1, openName = null;
   var hidden = {}, view = "chart", logView = "nights", showAllLog = false, hl = null;
   var src = "snapshot", stamp = null, busy = false, failed = false, lastLoadMs = 0, pendingScroll = false;
@@ -700,6 +709,7 @@
     var parts = [];
     if (period !== "all") parts.push("period=" + encodeURIComponent(period));
     if (basis === "group") parts.push("rating=group");
+    if (activeOnly) parts.push("active=1");
     if (openName) parts.push("player=" + encodeURIComponent(openName));
     try { history.replaceState(null, "", parts.length ? "#" + parts.join("&") : location.pathname + location.search); } catch (e) {}
   }
@@ -751,16 +761,21 @@
   function renderToolbar() {
     $("#bGroup").setAttribute("aria-pressed", basis === "group");
     $("#bTable").setAttribute("aria-pressed", basis === "table");
+    $("#aAll").setAttribute("aria-pressed", !activeOnly);
+    $("#aActive").setAttribute("aria-pressed", activeOnly);
+    var msgs = [];
+    if (period !== "all") msgs.push("Showing " + M.games.length + " of " + ALL.length + " games. Ratings and everything below use only these games.");
+    if (activeOnly) msgs.push(M.hidden.length
+      ? "Hiding " + plural(M.hidden.length, "player") + " (" + names(M.hidden) + ") who haven\u2019t played in the " + ACTIVE_DAYS + " days up to " + fmtDate(ANCHOR) + ", the latest game. Ratings still use every game."
+      : "Everyone has played within " + ACTIVE_DAYS + " days of the latest game, so nobody is hidden.");
     var el = $("#scope");
-    if (period === "all") { el.hidden = true; el.textContent = ""; return; }
-    el.hidden = false;
-    el.textContent = "Showing " + M.games.length + " of " + ALL.length + " games. Ratings and everything below use only these games.";
+    el.hidden = !msgs.length; el.textContent = msgs.join(" ");
   }
 
   // ---------- facts / awards ----------
   function renderFacts() {
     var box = $("#facts"); clear(box);
-    var ps = M.players.filter(function (p) { return p.g; });
+    var ps = M.shown.filter(function (p) { return p.g; });
     if (!ps.length) return;
     function fact(k, v, n) { box.appendChild(h("div", { class: "fact" }, h("span", { class: "k", text: k }), h("span", { class: "v", text: v }), h("span", { class: "n", text: n }))); }
     function maxOf(key) { return Math.max.apply(null, ps.map(function (p) { return p[key]; })); }
@@ -774,6 +789,7 @@
     var best = 0, bestList = [];
     M.nights.forEach(function (n) {
       Object.keys(n.wins).forEach(function (nm) {
+        if (!isShown(M.byName[nm])) return;
         var w = n.wins[nm];
         if (w > best) { best = w; bestList = []; }
         if (w === best) bestList.push({ p: M.byName[nm], date: n.date });
@@ -806,7 +822,7 @@
 
   function renderBoard() {
     var hint = "Ranked by rating. Select a player for details.";
-    if (M.prevDate && M.players.some(function (p) { return p.delta != null; })) hint = "Ranked by rating. Arrows show the change since " + fmtDate(M.prevDate) + ", the previous game night. Select a player for details.";
+    if (M.prevDate && M.shown.some(function (p) { return p.delta != null; })) hint = "Ranked by rating. Arrows show the change since " + fmtDate(M.prevDate) + ", the previous game night. Select a player for details.";
     $("#boardHint").textContent = hint;
 
     var head = $("#boardHead"); clear(head);
@@ -816,16 +832,16 @@
     head.appendChild(tr);
 
     var body = $("#boardBody"); clear(body);
-    if (!M.players.length) { body.appendChild(h("tr", { class: "emptyrow" }, h("td", { colspan: 8, text: "No games in this period." }))); return; }
+    if (!M.shown.length) { body.appendChild(h("tr", { class: "emptyrow" }, h("td", { colspan: 8, text: M.players.length ? "No active players in this period." : "No games in this period." }))); return; }
 
-    var rows = M.players.slice().sort(function (a, b) {
+    var rows = M.shown.slice().sort(function (a, b) {
       var av = sortKey === "name" ? a.name.toLowerCase() : a[sortKey], bv = sortKey === "name" ? b.name.toLowerCase() : b[sortKey];
       if (av < bv) return -1 * sortDir; if (av > bv) return 1 * sortDir;
       return a.rank - b.rank;
     });
     rows.forEach(function (p) {
       var open = openName === p.name;
-      var tile = h("span", { class: "tile" + (p.rank === 1 ? " first" : ""), "aria-label": "Rank " + p.rank, text: p.rank });
+      var tile = h("span", { class: "tile" + (p.shownRank === 1 ? " first" : ""), "aria-label": "Rank " + p.shownRank, text: p.shownRank });
       var btn = h("button", { type: "button", class: "pname", "aria-expanded": open ? "true" : "false", text: p.name, onclick: function (e) { e.stopPropagation(); toggle(p.name); } });
       var sub = h("span", { class: "sub" },
         h("span", { class: "sub-m", text: plural(p.g, "game") + " · " + plural(p.w, "win") }),
@@ -909,14 +925,14 @@
     for (var i = 0; i < steps.length; i++) if (span / steps[i] <= 6) return steps[i];
     return 500;
   }
-  function visiblePlayers() { return M.players.filter(function (p) { return !hidden[p.name] && p.first != null; }); }
+  function visiblePlayers() { return M.shown.filter(function (p) { return !hidden[p.name] && p.first != null; }); }
 
   function renderLegend() {
     $("#chartHint").textContent = basis === "table"
       ? "Rating after each game. The darker line is 1,000: winning exactly as often as table sizes predict."
       : "Rating after each game. The darker line is 1,000, the group average.";
     var box = $("#legend"); clear(box);
-    M.players.slice().sort(function (a, b) { return a.rank - b.rank; }).forEach(function (p) {
+    M.shown.slice().sort(function (a, b) { return a.rank - b.rank; }).forEach(function (p) {
       box.appendChild(h("button", { type: "button", class: "chip", style: "--c:" + colorVar(p), "aria-pressed": hidden[p.name] ? "false" : "true",
         onclick: function () { hidden[p.name] = !hidden[p.name]; hl = null; renderLegend(); drawChart(); renderTable(); },
         onmouseenter: function () { setHL(p.name); }, onmouseleave: function () { setHL(null); },
@@ -1093,7 +1109,7 @@
   // ---------- head-to-head grid ----------
   function renderMatrix() {
     var box = $("#matrix"); clear(box);
-    var ps = M.players.slice().sort(function (a, b) { return a.rank - b.rank; });
+    var ps = M.shown.slice().sort(function (a, b) { return a.rank - b.rank; });
     if (ps.length < 2) { box.appendChild(h("p", { class: "empty", text: "This appears once two players have shared a game." })); return; }
     var head = h("tr", null, h("th", { scope: "col", "aria-label": "Player" }));
     ps.forEach(function (q) { head.appendChild(h("th", { scope: "col", text: shortName(q) })); });
@@ -1168,7 +1184,7 @@
 
     if (M.LG) {
       head("Worked examples with the numbers on screen");
-      var played = M.players.filter(function (p) { return p.g; });
+      var played = M.shown.filter(function (p) { return p.g; });
       var top = played.slice().sort(function (a, c) { return a.rank - c.rank; })[0];
       var few = played.filter(function (p) { return p !== top; }).sort(function (a, c) { return a.g - c.g || c.rank - a.rank; })[0];
       [top, few].forEach(function (p, i) {
@@ -1211,6 +1227,7 @@
 
     head("Periods, nights and the arrows");
     para(["The Period menu recalculates everything using only the games in that period, so a monthly rating starts fresh on the first of the month, with everyone back at the starting assumption. The ", ["arrows"], " next to each rating compare it with the rating after the previous game night. Someone who didn’t play the latest night can still move slightly, because the group’s win rate shifts a little with every game. ", ["Nemesis"], " and ", ["Lucky charm"], " in a player’s details need at least three shared games."]);
+    para([["Active only"], " hides players who haven\u2019t played in the " + ACTIVE_DAYS + " days up to the most recent game. It changes who is listed, not the math: ratings and arrows still come from every game. Awards only consider the players shown, and the game log keeps its full history. The choice is remembered on your device."]);
 
     head("What the rating can’t tell you");
     list("ul", [
@@ -1223,7 +1240,16 @@
   }
 
   // ---------- render ----------
-  function recompute() { M = compute(periodGames(), basis, ORDER); }
+  function isActive(name) { return !CUTOFF || (LAST[name] || "") >= CUTOFF; }
+  function isShown(p) { return !activeOnly || p.active; }
+
+  function recompute() {
+    M = compute(periodGames(), basis, ORDER);
+    M.players.forEach(function (p) { p.active = isActive(p.name); });
+    M.shown = M.players.filter(isShown);
+    M.hidden = M.players.filter(function (p) { return !isShown(p); });
+    M.shown.slice().sort(function (a, b) { return b.rating - a.rating || b.g - a.g; }).forEach(function (p, i) { p.shownRank = i + 1; });
+  }
 
   function renderAll() {
     renderHeader(); renderToolbar(); renderFacts(); renderBoard(); renderLegend(); renderLog(); renderMatrix(); renderHow();
@@ -1241,9 +1267,16 @@
     ALL = sortGames(data.games);
     ORDER = [];
     ALL.forEach(function (g) { g.players.forEach(function (n) { if (ORDER.indexOf(n) < 0) ORDER.push(n); }); });
+    LAST = {}; ANCHOR = "";
+    ALL.forEach(function (g) {
+      if (g.date > ANCHOR) ANCHOR = g.date;
+      g.players.forEach(function (n) { if (!LAST[n] || g.date > LAST[n]) LAST[n] = g.date; });
+    });
+    var anchorDay = parseIso(ANCHOR);
+    if (anchorDay) { anchorDay.setDate(anchorDay.getDate() - ACTIVE_DAYS); CUTOFF = isoOf(anchorDay); } else CUTOFF = "";
     buildPeriods();
     recompute();
-    if (openName && !M.byName[openName]) openName = null;
+    if (openName && !(M.byName[openName] && isShown(M.byName[openName]))) openName = null;
     writeHash();
     renderAll();
   }
@@ -1278,6 +1311,14 @@
   function setBasis(b) { if (basis === b) return; basis = b; recompute(); writeHash(); renderAll(); }
   $("#bGroup").addEventListener("click", function () { setBasis("group"); });
   $("#bTable").addEventListener("click", function () { setBasis("table"); });
+  function setActive(on) {
+    if (activeOnly === on) return;
+    activeOnly = on;
+    try { if (on) localStorage.setItem(ACTIVE_KEY, "1"); else localStorage.removeItem(ACTIVE_KEY); } catch (e) {}
+    recompute(); writeHash(); renderAll();
+  }
+  $("#aAll").addEventListener("click", function () { setActive(false); });
+  $("#aActive").addEventListener("click", function () { setActive(true); });
   $("#lNights").addEventListener("click", function () { logView = "nights"; showAllLog = false; renderLog(); });
   $("#lGames").addEventListener("click", function () { logView = "games"; showAllLog = false; renderLog(); });
   $("#moreLog").addEventListener("click", function () { showAllLog = !showAllLog; renderLog(); });
@@ -1303,6 +1344,7 @@
   var hs = readHash();
   if (hs.period) period = hs.period;
   if (hs.rating === "group") basis = "group";
+  try { if (hs.active === "1" || (hs.active == null && localStorage.getItem(ACTIVE_KEY) === "1")) activeOnly = true; } catch (e) { if (hs.active === "1") activeOnly = true; }
   if (hs.player) { openName = hs.player; pendingScroll = true; }
 
   var cached = CFG.sheetCsvUrl ? readCache() : null;
