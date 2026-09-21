@@ -389,6 +389,13 @@
     .status { flex-wrap: wrap; }
   }
 
+
+  /* phone polish (kept last so it wins over earlier rules) */
+  .only-m { display: none; }
+  .sort { padding: 8px 2px; }
+  .linkbtn { padding: 6px 4px; }
+  @media (max-width: 719px) { .only-m { display: inline; } .toolbar { gap: 14px 16px; } }
+  @media (max-width: 480px) { .eq { font-size: 13.5px; gap: 6px; } .formula { padding: 16px 14px; } }
 </style>
 </head>
 <body>
@@ -411,17 +418,17 @@
   <div class="toolbar" role="group" aria-label="Filters">
     <label class="fld" for="period"><span>Period</span><select id="period"></select></label>
     <div class="fld">
-      <span id="basisLbl">Rating</span>
-      <div class="seg" role="group" aria-labelledby="basisLbl">
-        <button type="button" id="bTable" aria-pressed="true">Table-adjusted</button>
-        <button type="button" id="bGroup" aria-pressed="false">Group average</button>
-      </div>
-    </div>
-    <div class="fld">
       <span id="actLbl">Players</span>
       <div class="seg" role="group" aria-labelledby="actLbl">
         <button type="button" id="aAll" aria-pressed="true">All</button>
         <button type="button" id="aActive" aria-pressed="false" title="Hides players who haven't played in the 30 days before the latest game">Active only</button>
+      </div>
+    </div>
+    <div class="fld">
+      <span id="basisLbl">Rating</span>
+      <div class="seg" role="group" aria-labelledby="basisLbl">
+        <button type="button" id="bTable" aria-pressed="true">Table-adjusted</button>
+        <button type="button" id="bGroup" aria-pressed="false">Group average</button>
       </div>
     </div>
     <p class="scope" id="scope" hidden></p>
@@ -478,7 +485,7 @@
   <section class="panel" aria-labelledby="h-h2h">
     <div class="panel-head">
       <h2 id="h-h2h">Head to head</h2>
-      <p class="hint">Row player's wins, then column player's wins, in games they both played. Green means the row player wins more often at those tables.</p>
+      <p class="hint">Row player's wins, then column player's wins, in games they both played. Green means the row player wins more often at those tables.<span class="only-m"> Scroll sideways to see every player.</span></p>
     </div>
     <div class="mscroll" id="matrix"></div>
   </section>
@@ -895,6 +902,9 @@
       h("dt", { text: "Best streak" }), h("dd", { text: plural(p.bestWin, "win") }),
       h("dt", { text: "Current streak" }), h("dd", { text: p.curWin ? plural(p.curWin, "win") : p.curLoss ? plural(p.curLoss, "loss", "losses") : "None" }),
       h("dt", { text: "First game" }), h("dd", { text: M.games[p.first].id + " · " + fmtDate(M.games[p.first].date) }));
+    dl.appendChild(h("dt", { text: "Win rate" })); dl.appendChild(h("dd", { text: pct(p.wr) }));
+    dl.appendChild(h("dt", { text: "Expected" })); dl.appendChild(h("dd", { text: pct(p.expR) }));
+    dl.appendChild(h("dt", { text: "Luck" })); dl.appendChild(h("dd", { text: signed(p.luck) + " pts" }));
     if (nemesis) { var tn = p.together[nemesis]; dl.appendChild(h("dt", { text: "Nemesis", title: "Wins the biggest share of the games you both play in" })); dl.appendChild(h("dd", { text: shortName(M.byName[nemesis]) + " · won " + tn.theirs + " of " + tn.g + " together" })); }
     if (charm) { var tc = p.together[charm]; dl.appendChild(h("dt", { text: "Lucky charm", title: "The table-mate you win the biggest share of games with" })); dl.appendChild(h("dd", { text: shortName(M.byName[charm]) + " · " + shortName(p) + " won " + tc.mine + " of " + tc.g + " together" })); }
 
@@ -1008,11 +1018,13 @@
     svg.appendChild(hit);
 
     geo = { x: x, y: y, N: N, m: m, W: W, H: H, iw: iw, cross: cross, marks: marks, order: order };
-    hit.addEventListener("pointermove", function (e) {
+    function place(e) {
       var r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * (W / r.width);
       showAt(Math.max(0, Math.min(N - 1, Math.round(((px - m.l) / iw) * (N - 1)))));
-    });
-    hit.addEventListener("pointerleave", hideTip);
+    }
+    hit.addEventListener("pointermove", place);
+    hit.addEventListener("pointerdown", place);
+    hit.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") hideTip(); });
     if (hl) setHL(hl);
     if (kbIdx != null && document.activeElement === svg) showAt(Math.min(kbIdx, N - 1));
   }
@@ -1325,6 +1337,7 @@
   $("#vChart").addEventListener("click", function () { setView("chart"); });
   $("#vTable").addEventListener("click", function () { setView("table"); });
 
+  document.addEventListener("pointerdown", function (e) { if (!e.target.closest || !e.target.closest("#chartwrap")) hideTip(); });
   var svgEl = $("#chart");
   svgEl.addEventListener("keydown", function (e) {
     if (!geo) return;
